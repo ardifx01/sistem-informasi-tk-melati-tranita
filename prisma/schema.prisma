@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Siswa {
+  id           String    @id @default(cuid())
+  nis          String    @unique
+  nama         String
+  jenisKelamin JenisKelamin
+  tanggalLahir DateTime
+  alamat       String
+  telepon      String
+  orangTua     String
+  kelasId      String
+  kelas        Kelas     @relation(fields: [kelasId], references: [id])
+  tagihan      Tagihan[] 
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Kelas {
+  id        String   @id @default(cuid())
+  nama      String   @unique
+  waliKelas String
+  siswa     Siswa[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tagihan {
+  id                String           @id @default(cuid())
+  siswaId           String
+  siswa             Siswa            @relation(fields: [siswaId], references: [id])
+  keterangan        String // Contoh: "SPP Bulan Juli 2025"
+  jumlahTagihan     Int
+  tanggalJatuhTempo DateTime
+  status            StatusPembayaran @default(BELUM_LUNAS)
+  pemasukan         Pemasukan? // Sebuah tagihan bisa memiliki satu pemasukan (pembayaran)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model Pemasukan {
+  id         String           @id @default(cuid())
+  tanggal    DateTime
+  jumlah     Int
+  keterangan String
+  kategori   KategoriPemasukan
+  tagihanId  String           @unique // <-- PERUBAHAN: Setiap pemasukan melunasi satu tagihan
+  tagihan    Tagihan          @relation(fields: [tagihanId], references: [id])
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model Pengeluaran {
+  id         String             @id @default(cuid())
+  tanggal    DateTime
+  jumlah     Int
+  keterangan String
+  kategori   KategoriPengeluaran
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+// --- ENUMS ---
+
+enum KategoriPemasukan {
+  UANG_SEKOLAH
+  UANG_PENDAFTARAN
+  LAINNYA
+}
+
+enum KategoriPengeluaran {
+  ATK
+  OPERASIONAL
+  GAJI_GURU
+  KEGIATAN_SISWA
+  PERAWATAN_ASET
+  LAINNYA
+}
+
+enum StatusPembayaran {
+  BELUM_LUNAS
+  LUNAS
+  TERLAMBAT
+}
+
+enum Role {
+  ADMIN
+  GURU
+}
+
+enum JenisKelamin {
+  L
+  P
+}
