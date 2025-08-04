@@ -46,7 +46,7 @@ import { api } from "@/lib/api";
 import type { KategoriPengeluaran } from "@/lib/types";
 import { createPengeluaranSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
-import { CurrencyInput } from "@/components/ui/currency-input";
+import { CurrencyInput } from "@/components/Layout/CurrencyInput";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof createPengeluaranSchema>;
