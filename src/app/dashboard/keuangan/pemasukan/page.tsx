@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { AppLayout } from "@/components/Layout/AppLayout";
 import { PemasukanTable } from "@/components/Keuangan/Pemasukan/PemasukanTable";
 import {
   Card,
@@ -23,9 +22,33 @@ import {
 import { api } from "@/lib/api";
 import type { Pemasukan, Kelas } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
-import { Search, RotateCcw } from "lucide-react";
+import { Search, RotateCcw, Download } from "lucide-react";
+import {
+  ExportLaporanDialog,
+  type ExportColumn,
+} from "@/components/Layout/ExportLaporanDialog";
+import { formatDate } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 30; // Batas data per halaman
+
+// Definisikan kolom untuk ekspor laporan pemasukan
+const pemasukanColumns: ExportColumn<Pemasukan>[] = [
+  {
+    header: "Tanggal",
+    accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
+  },
+  {
+    header: "Nama Siswa",
+    accessor: (item) => item.tagihan?.siswa?.nama || "N/A",
+  },
+  {
+    header: "Kelas",
+    accessor: (item) => item.tagihan?.siswa?.kelas?.nama || "N/A",
+  },
+  { header: "Keterangan", accessor: (item) => item.keterangan },
+  { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
+  { header: "Jumlah", accessor: (item) => item.jumlah },
+];
 
 function PemasukanPageSkeleton() {
   return (
@@ -165,11 +188,27 @@ export default function PemasukanPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Riwayat Pemasukan</h2>
-        <p className="text-muted-foreground">
-          Catatan semua transaksi pemasukan yang telah terjadi.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Riwayat Pemasukan
+          </h2>
+          <p className="text-muted-foreground">
+            Catatan semua transaksi pemasukan yang telah terjadi.
+          </p>
+        </div>
+        {/* --- PENGGUNAAN KOMPONEN EKSPOR --- */}
+        <ExportLaporanDialog
+          data={allPemasukan}
+          columns={pemasukanColumns}
+          filename="Laporan Pemasukan"
+          title="Laporan Pemasukan"
+        >
+          <Button variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Unduh Laporan
+          </Button>
+        </ExportLaporanDialog>
       </div>
       <Card>
         <CardHeader>
