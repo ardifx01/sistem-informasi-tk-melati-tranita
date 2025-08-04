@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
           {
             nama: {
               contains: query,
-              //   mode: "insensitive", // Tidak membedakan huruf besar/kecil
+              mode: "insensitive", // Tidak membedakan huruf besar/kecil
             },
           },
           {
