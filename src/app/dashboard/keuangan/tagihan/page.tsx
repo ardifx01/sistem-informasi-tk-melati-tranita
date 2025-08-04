@@ -22,7 +22,8 @@ import {
 import { api } from "@/lib/api";
 import type { Tagihan, Kelas } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const ITEMS_PER_PAGE = 30; // Menetapkan batas data per halaman
 
@@ -60,6 +61,7 @@ export default function TagihanPage() {
   const [loading, setLoading] = useState(true);
 
   // State untuk filter
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedBulan, setSelectedBulan] = useState<string>("all");
   const [selectedKelas, setSelectedKelas] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -133,8 +135,14 @@ export default function TagihanPage() {
         );
       });
     }
+    if (searchTerm) {
+      filteredData = filteredData.filter((p) =>
+        p.siswa?.nama?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
     return filteredData;
-  }, [selectedBulan, selectedKelas, selectedStatus, allTagihan]);
+  }, [selectedBulan, selectedKelas, selectedStatus, allTagihan, searchTerm]);
 
   // --- LOGIKA PAGINASI BARU ---
   const totalPages = Math.ceil(filteredTagihan.length / ITEMS_PER_PAGE) || 1;
@@ -155,6 +163,7 @@ export default function TagihanPage() {
 
   // Handler untuk mereset semua filter
   const handleResetFilters = () => {
+    setSearchTerm("");
     setSelectedBulan("all");
     setSelectedKelas("all");
     setSelectedStatus("all");
@@ -164,7 +173,7 @@ export default function TagihanPage() {
   // Reset halaman ke 1 setiap kali filter berubah
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedBulan, selectedKelas, selectedStatus]);
+  }, [selectedBulan, selectedKelas, selectedStatus, searchTerm]);
 
   if (loading) {
     return <TagihanPageSkeleton />;
@@ -192,6 +201,16 @@ export default function TagihanPage() {
             tagihan.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Cari nama siswa..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
             <Select value={selectedBulan} onValueChange={setSelectedBulan}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Filter Bulan" />
