@@ -43,6 +43,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { api } from "@/lib/api";
 import type { Kelas, Siswa } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { CurrencyInput } from "@/components/Layout/CurrencyInput";
 
 // Skema validasi Zod
 const createTagihanSchema = z.object({
@@ -185,7 +186,11 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
                 <FormItem>
                   <FormLabel>Jumlah Tagihan (Rp)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="150000" {...field} />
+                    <CurrencyInput
+                      placeholder="Contoh: 200.000"
+                      value={field.value ?? 0}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
