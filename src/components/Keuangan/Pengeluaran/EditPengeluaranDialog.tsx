@@ -26,7 +26,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -45,6 +44,7 @@ import { api } from "@/lib/api";
 import type { Pengeluaran, KategoriPengeluaran } from "@/lib/types";
 import { updatePengeluaranSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof updatePengeluaranSchema>;
@@ -163,12 +163,9 @@ export function EditPengeluaranDialog({
                 <FormItem>
                   <FormLabel>Jumlah (Rp)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value, 10) || 0)
-                      }
+                    <CurrencyInput
+                      value={field.value ?? 0}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

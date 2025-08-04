@@ -46,6 +46,7 @@ import { api } from "@/lib/api";
 import type { KategoriPengeluaran } from "@/lib/types";
 import { createPengeluaranSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { CurrencyInput } from "@/components/ui/currency-input";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof createPengeluaranSchema>;
@@ -159,13 +160,10 @@ export function AddPengeluaranDialog({
                 <FormItem>
                   <FormLabel>Jumlah (Rp)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Contoh: 50000"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value, 10) || 0)
-                      }
+                    <CurrencyInput
+                      placeholder="Contoh: 50.000"
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />
