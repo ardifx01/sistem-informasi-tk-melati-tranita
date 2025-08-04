@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { Tagihan, KategoriPemasukan } from "@/lib/types";
-import { CurrencyInput } from "@/components/Layout/CurrencyInput";
+import { CurrencyInput } from "@/components/shared/CurrencyInput";
 
 // Skema validasi untuk form pembayaran
 const createPemasukanSchema = z.object({

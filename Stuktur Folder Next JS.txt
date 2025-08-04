@@ -1,0 +1,138 @@
+
+prisma/                                         # Database
+    ├── schema.prisma                           # Database schema
+    ├── migrations/                             # Database migrations
+    └── seed.ts                                 # Seed Sample data
+public/
+└── icons/                                      # public assets eg. favicon, icons, image
+src/
+├──── app/                                        # App Router Next.js
+│   ├── globals.css
+│   ├── page.tsx                                
+│   ├── layout.tsx
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── login/route.ts
+│   │   │   └── register/route.ts
+│   │   └── dashboard/
+│   │   │   └── stats/route.ts
+│   │   └── kelas/
+│   │   │   └── [id]/route.ts
+│   │   │   └── route.ts
+│   │   └── keuangan/
+│   │   │   └── pemasukan/route.ts
+│   │   │   └── pengeluaran/route.ts
+│   │   │   └── tagihan/route.ts
+│   │   └── siswa/
+│   │   │   └── [id]/route.ts
+│   │   │   └── kelas/[kelasId]/route.ts
+│   │   │   └── search/route.ts
+│   │   │   └── route.ts
+│   │
+│   ├── auth/
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   └── register/
+│   │       └── page.tsx
+│   │
+│   ├── dashboard/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── kelas/
+│   │   │   └── page.tsx
+│   │   │
+│   │   ├── keuangan/
+│   │   │   ├── page.tsx
+│   │   │   ├── tagihan/
+│   │   │   │    └── page.tsx
+│   │   │   ├── pemasukan/
+│   │   │   │    └── page.tsx
+│   │   │   └── pengeluaran/
+│   │   │       └── page.tsx
+│   │   │
+│   │   ├── panduan/
+│   │   │   └── page.tsx
+│   │   │
+│   │   └── siswa/
+│   │       ├── [id]/
+│   │       │    └── page.tsx
+│   │       └── page.tsx
+│   │
+├───├ components/
+    │   ├── Auth/
+    │   │   ├── LoginForm.tsx
+    │   │   └── RegisterForm.tsx
+    │   │
+    │   ├── Dashboard/
+    │   │   ├── BirthYearDistribution.tsx
+    │   │   ├── GenderRatioChart.tsx
+    │   │   ├── SiswaChart.tsx
+    │   │   ├── StatCard.tsx
+    │   │   └── TrenKeuangan.tsx
+    │   │
+    │   ├── Kelas/
+    │   │   ├── AddKelasDialog.tsx
+    │   │   ├── EditKelasDialog.tsx
+    │   │   └── KelasTable.tsx
+    │   │
+    │   ├── keuangan/
+    │   │   ├── Dashboard
+    │   │   │    └── KategoriPengeluaranChart.tsx
+    │   │   │    └── RecentTransactions.tsx
+    │   │   │    └── TunggakanTeratas.tsx
+    │   │   ├── Tagihan/
+    │   │   │    └── AddTagihanDialog.tsx
+    │   │   │    └── BayarTagihanDialog.tsx
+    │   │   │    └── EditTagihanDialog.tsx
+    │   │   │    └── TagihanTable.tsx
+    │   │   ├── Pemasukan/
+    │   │   │    └── PemasukanTable.tsx
+    │   │   └── Pengeluaran/
+    │   │       └── AddPengeluaranDialog.tsx
+    │   │       └── EditPengeluaranDialog.tsx
+    │   │       └── PengeluaranTable.tsx
+    │   │
+    │   ├── Layout/
+    │   │   ├── AppLayout.tsx
+    │   │   ├── BackButton.tsx
+    │   │   ├── CurrencyInput.tsx
+    │   │   ├── DeleteDialog.tsx
+    │   │   ├── ExportLaporanDialog.tsx
+    │   │   ├── FormFields.tsx
+    │   │   ├── LaporanReviewDialog.tsx
+    │   │   ├── Sidebar.tsx
+    │   │   ├── Table.tsx
+    │   │   └── Topbar.tsx
+    │   │
+    │   ├── Siswa/
+    │   │   ├── AddSiswaDialog.tsx
+    │   │   ├── EditSiswaDialog.tsx
+    │   │   ├── RiwayatTagihanTable.tsx
+    │   │   └── SiswaTable.tsx
+    │   │
+    │   └── ui/
+    │       ├── avatar.tsx
+    │       ├── badge.tsx
+    │       ├── button.tsx
+    │       ├── card.tsx
+    │       └── (komponen shadcn/ui lainnya)
+    └── lib/
+        ├── api.ts
+        ├── auth.ts
+        ├── db.ts
+        ├── types.ts
+        ├── utils.ts
+        └── validations.ts
+.env
+.gitignore
+components.json
+LICENSE
+next-env.d.ts
+next.config.ts
+package-lock.json
+package.json
+postcss.config.js
+prisma.config.ts
+README.md
+tailwind.config.js
+tsconfig.json

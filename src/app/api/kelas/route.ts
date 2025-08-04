@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { createKelasSchema } from "@/lib/validations";
+import { createKelasSchema } from "@/lib/validation";
 
 // GET /api/kelas - Mengambil semua kelas beserta jumlah siswanya
 export async function GET() {

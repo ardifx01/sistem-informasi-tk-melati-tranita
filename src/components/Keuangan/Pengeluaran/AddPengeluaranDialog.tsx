@@ -44,9 +44,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import type { KategoriPengeluaran } from "@/lib/types";
-import { createPengeluaranSchema } from "@/lib/validations";
+import { createPengeluaranSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
-import { CurrencyInput } from "@/components/Layout/CurrencyInput";
+import { CurrencyInput } from "@/components/shared/CurrencyInput";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof createPengeluaranSchema>;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { createSiswaSchema } from "@/lib/validations";
+import { createSiswaSchema } from "@/lib/validation";
 import { format } from "date-fns";
 import { id as localeID } from "date-fns/locale";
 

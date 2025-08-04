@@ -20,7 +20,7 @@ import type { DashboardStats, Pemasukan, Pengeluaran } from "@/lib/types";
 import {
   ExportLaporanDialog,
   type ExportColumn,
-} from "@/components/Layout/ExportLaporanDialog";
+} from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

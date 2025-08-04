@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { updateKelasSchema } from "@/lib/validations";
+import { updateKelasSchema } from "@/lib/validation";
 import { Prisma } from "@/generated/prisma/client";
 
 // GET /api/kelas/[id] - Mengambil data kelas spesifik

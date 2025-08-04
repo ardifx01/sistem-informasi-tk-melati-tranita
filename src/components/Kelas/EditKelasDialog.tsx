@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import type { Kelas } from "@/lib/types";
-import { updateKelasSchema } from "@/lib/validations";
+import { updateKelasSchema } from "@/lib/validation";
 import { Label } from "../ui/label";
 
 // Tipe untuk nilai form, diambil dari skema Zod

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { updateSiswaSchema } from "@/lib/validations"; // Pastikan validasi ini sesuai
+import { updateSiswaSchema } from "@/lib/validation"; // Pastikan validasi ini sesuai
 
 // GET /api/siswa/[id] - Mengambil data siswa spesifik
 export async function GET(

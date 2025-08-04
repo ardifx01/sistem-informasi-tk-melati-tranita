@@ -26,7 +26,7 @@ import { Download, RotateCcw } from "lucide-react";
 import {
   ExportColumn,
   ExportLaporanDialog,
-} from "@/components/Layout/ExportLaporanDialog";
+} from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 30;

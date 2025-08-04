@@ -36,7 +36,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { api } from "@/lib/api";
 import type { Tagihan } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { CurrencyInput } from "@/components/Layout/CurrencyInput";
+import { CurrencyInput } from "@/components/shared/CurrencyInput";
 
 // Skema validasi Zod untuk update tagihan
 const updateTagihanSchema = z.object({

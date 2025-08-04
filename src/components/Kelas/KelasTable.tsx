@@ -21,7 +21,7 @@ import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Kelas } from "@/lib/types";
 import { EditKelasDialog } from "./EditKelasDialog";
-import { DeleteDialog } from "@/components/Layout/DeleteDialog";
+import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { toast } from "sonner";
 
 interface KelasTableProps {

@@ -10,7 +10,7 @@ import { api } from "@/lib/api";
 import type { Siswa } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { RiwayatTagihanTable } from "@/components/Siswa/RiwayatTagihanTable";
-import BackButton from "../../../../components/Layout/BackButton";
+import BackButton from "../../../../components/shared/BackButton";
 
 // Komponen Skeleton untuk tampilan loading
 function SiswaDetailSkeleton() {

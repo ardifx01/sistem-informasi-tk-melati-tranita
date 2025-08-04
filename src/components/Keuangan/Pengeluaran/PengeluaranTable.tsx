@@ -22,7 +22,7 @@ import { MoreHorizontal, Edit, Trash2, ArrowUpDown } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Pengeluaran } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { DeleteDialog } from "@/components/Layout/DeleteDialog";
+import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { toast } from "sonner";
 import { EditPengeluaranDialog } from "./EditPengeluaranDialog";
 

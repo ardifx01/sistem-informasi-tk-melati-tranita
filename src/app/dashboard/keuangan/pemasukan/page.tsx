@@ -26,7 +26,7 @@ import { Search, RotateCcw, Download } from "lucide-react";
 import {
   ExportLaporanDialog,
   type ExportColumn,
-} from "@/components/Layout/ExportLaporanDialog";
+} from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 30; // Batas data per halaman

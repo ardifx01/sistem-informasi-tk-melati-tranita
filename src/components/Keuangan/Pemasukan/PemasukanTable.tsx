@@ -21,7 +21,7 @@ import { MoreHorizontal, Trash2, ArrowUpDown } from "lucide-react";
 import { api } from "@/lib/api";
 import { type Pemasukan } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { DeleteDialog } from "@/components/Layout/DeleteDialog";
+import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { toast } from "sonner";
 
 // Menentukan tipe data yang bisa di-sort

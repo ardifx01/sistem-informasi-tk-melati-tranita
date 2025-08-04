@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Edit, Trash2, Eye, ArrowUpDown } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa as SiswaType } from "@/lib/types";
-import { DeleteDialog } from "@/components/Layout/DeleteDialog";
+import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { EditSiswaDialog } from "./EditSiswaDialog";
 import { toast } from "sonner";
 

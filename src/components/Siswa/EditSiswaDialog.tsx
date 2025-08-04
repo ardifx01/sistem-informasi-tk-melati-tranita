@@ -42,7 +42,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import type { Siswa, Kelas } from "@/lib/types";
-import { updateSiswaSchema } from "@/lib/validations";
+import { updateSiswaSchema } from "@/lib/validation";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type SiswaFormValues = z.infer<typeof updateSiswaSchema>;

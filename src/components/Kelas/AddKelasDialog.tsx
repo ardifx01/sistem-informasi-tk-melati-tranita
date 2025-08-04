@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
-import { createKelasSchema } from "@/lib/validations";
+import { createKelasSchema } from "@/lib/validation";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type KelasFormValues = z.infer<typeof createKelasSchema>;

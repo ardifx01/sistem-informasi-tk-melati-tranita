@@ -43,7 +43,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { api } from "@/lib/api";
 import type { Kelas, Siswa } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { CurrencyInput } from "@/components/Layout/CurrencyInput";
+import { CurrencyInput } from "@/components/shared/CurrencyInput";
 
 // Skema validasi Zod
 const createTagihanSchema = z.object({

@@ -24,7 +24,7 @@ import { formatDate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import type { Tagihan, StatusPembayaran } from "@/lib/types";
 import { toast } from "sonner";
-import { DeleteDialog } from "@/components/Layout/DeleteDialog";
+import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { BayarTagihanDialog } from "./BayarTagihanDialog";
 import { EditTagihanDialog } from "./EditTagihanDialog";
 import { cn } from "@/lib/utils";
