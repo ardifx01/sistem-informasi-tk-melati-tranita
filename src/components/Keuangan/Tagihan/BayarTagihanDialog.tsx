@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { Tagihan, KategoriPemasukan } from "@/lib/types";
+import { CurrencyInput } from "@/components/Layout/CurrencyInput";
 
 // Skema validasi untuk form pembayaran
 const createPemasukanSchema = z.object({
@@ -128,7 +129,11 @@ export function BayarTagihanDialog({
                 <FormItem>
                   <FormLabel>Jumlah Bayar (Rp)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <CurrencyInput
+                      value={field.value ?? 0}
+                      onChange={field.onChange}
+                      disabled
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
