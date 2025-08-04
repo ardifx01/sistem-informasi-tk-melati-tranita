@@ -53,11 +53,11 @@ type PengeluaranFormValues = z.infer<typeof createPengeluaranSchema>;
 
 // Opsi untuk kategori pengeluaran
 const kategoriOptions: { value: KategoriPengeluaran; label: string }[] = [
-  { value: "ATK", label: "Alat Tulis Kantor (ATK)" },
   { value: "OPERASIONAL", label: "Operasional" },
-  { value: "GAJI_GURU", label: "Gaji Guru" },
-  { value: "KEGIATAN_SISWA", label: "Kegiatan Siswa" },
   { value: "PERAWATAN_ASET", label: "Perawatan Aset" },
+  { value: "KEGIATAN_SISWA", label: "Kegiatan Siswa" },
+  { value: "ATK", label: "Alat Tulis Kantor" },
+  { value: "GAJI_GURU", label: "Gaji Guru" },
   { value: "LAINNYA", label: "Lainnya" },
 ];
 
