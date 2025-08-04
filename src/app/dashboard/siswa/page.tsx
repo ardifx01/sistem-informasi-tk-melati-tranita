@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { api, type Siswa as SiswaType, type Kelas } from "@/lib/api";
+import { api } from "@/lib/api";
+import type { Siswa as SiswaType, Kelas } from "@/lib/types";
 
 // Tipe data yang diterima dari API, sekarang menyertakan jumlah tunggakan
 interface SiswaWithTunggakan extends SiswaType {
