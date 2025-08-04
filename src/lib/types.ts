@@ -144,6 +144,13 @@ export interface CreatePengeluaranRequest {
 
 // dashboard Stats
 export interface DashboardStats {
+  tunggakanTeratas: {
+    id: string | number;
+    siswa: { nama: string };
+    keterangan: string;
+    tanggalJatuhTempo: string | Date;
+    jumlahTagihan: number;
+  }[];
   overview: {
     totalSiswa: number;
     totalKelas: number;
