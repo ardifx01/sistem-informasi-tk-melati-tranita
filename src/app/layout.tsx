@@ -7,10 +7,43 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TK Melati Tranita",
-  description: "Dashboard Sistem Management TK Melati Tranita",
+  title: {
+    template: "%s | TK Melati Tranita",
+    default: "Dashboard TK Melati Tranita",
+  },
+  description: "Sistem Manajemen Keuangan dan Siswa untuk TK Melati Tranita.",
+  manifest: "/icons/favicon/site.webmanifest",
   icons: {
-    icon: "/icons/favicon.ico",
+    // This is the main icon, often the .ico file
+    icon: "/icons/favicon/favicon.ico",
+    // This is for the <link rel="shortcut icon"> tag
+    shortcut: "/icons/favicon/favicon.ico",
+    // Apple touch icon for iOS home screens
+    apple: [
+      {
+        url: "/icons/favicon/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+    // Other icons for different sizes and types
+    other: [
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "96x96",
+        url: "/icons/favicon/favicon-96x96.png",
+      },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        url: "/icons/favicon/favicon.svg",
+      },
+    ],
+  },
+  appleWebApp: {
+    title: "SchDashboard",
+    // You can also add startupImage and statusBarStyle here
   },
 };
 
