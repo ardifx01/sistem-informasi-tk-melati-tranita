@@ -1,59 +1,75 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { comparePassword, generateToken } from "@/lib/auth";
-import { loginSchema } from "@/lib/validation";
+// File: app/api/auth/login/route.ts
 
-export async function POST(request: NextRequest) {
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { z } from "zod";
+// Impor fungsi helper dari lib/auth.ts
+import { comparePassword, generateToken } from "@/lib/auth";
+
+// Skema validasi untuk login
+const loginSchema = z.object({
+  email: z.string().email("Email tidak valid."),
+  password: z.string().min(1, "Password tidak boleh kosong."),
+});
+
+export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const validatedData = loginSchema.parse(body);
+    const validation = loginSchema.safeParse(body);
 
-    // Find user by email
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "Data input tidak valid.",
+          details: validation.error.format(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { email, password } = validation.data;
+
+    // 1. Cari pengguna berdasarkan email
     const user = await prisma.user.findUnique({
-      where: { email: validatedData.email },
+      where: { email },
     });
 
     if (!user) {
       return NextResponse.json(
-        { error: "Email atau password tidak valid" },
+        { error: "Email atau password salah." },
         { status: 401 }
       );
     }
 
-    // Verify password
-    const isPasswordValid = await comparePassword(
-      validatedData.password,
-      user.password
-    );
+    // 2. Bandingkan password menggunakan fungsi helper Anda
+    const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Email atau password tidak valid" },
+        { error: "Email atau password salah." },
         { status: 401 }
       );
     }
 
-    // Generate token
+    // 3. Buat token menggunakan fungsi helper Anda
     const token = generateToken({
       id: user.id,
       email: user.email,
       role: user.role,
     });
 
-    // Return user data without password
-    const { password, ...userWithoutPassword } = user;
+    // Jangan kirim password kembali ke client
+    const { password: _, ...userWithoutPassword } = user;
 
     return NextResponse.json({
-      message: "Login berhasil",
-      user: userWithoutPassword,
+      message: "Login berhasil!",
       token,
+      user: userWithoutPassword,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
+    console.error("[LOGIN_API_ERROR]", error);
     return NextResponse.json(
-      { error: "Terjadi kesalahan server" },
+      { error: "Terjadi kesalahan pada server." },
       { status: 500 }
     );
   }
