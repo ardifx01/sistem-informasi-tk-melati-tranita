@@ -24,7 +24,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { api, type Kelas } from "@/lib/api";
+import { api } from "@/lib/api";
+import type { Kelas } from "@/lib/types";
 import { updateKelasSchema } from "@/lib/validations";
 import { Label } from "../ui/label";
 
