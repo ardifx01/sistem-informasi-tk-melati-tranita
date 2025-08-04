@@ -144,7 +144,86 @@ Aplikasi ini dioptimalkan untuk _deployment_ di [Vercel](https://vercel.com/).
     Perintah ini memastikan database produksi Anda selalu diperbarui dengan skema terbaru sebelum aplikasi di-_build_.
 
 4.  **Deploy:**
-    Vercel akan secara otomatis melakukan _deployment_ setiap kali Anda melakukan `git push` ke _branch_ utama.
+    Vercel akan secara otomatis melakukan _deployment_ setiap kali Anda melakukan `git push` ke _branch_ utama.\\
+
+## 📁 Struktur Project
+
+```
+prisma/                         # Database
+    ├── schema.prisma           # Database schema
+    ├── migrations/             # Database migrations
+    └── seed.ts                 # Seed Sample data
+public/
+└── icons/                      # public assets eg. favicon, icons, image
+src/
+├── app/
+│   ├── api/                    # Folder API (Penting untuk ditambahkan)
+│   │   ├── auth/
+│   │   │   └── login/route.ts
+│   │   │   └── register/route.ts
+│   │   └── dashboard/
+│   │   │   └── stats/route.ts
+│   │   └── kelas/
+│   │   │   └── [id]/route.ts
+│   │   │   └── route.ts
+│   │   └── keuangan/
+│   │   │   └── pemasukan/route.ts
+│   │   │   └── pengeluaran/route.ts
+│   │   │   └── tagihan/route.ts
+│   │   └── siswa/
+│   │   │   └── [id]/route.ts
+│   │   │   └── kelas/[kelasId]/route.ts
+│   │   │   └── search/route.ts
+│   │   │   └── route.ts
+│   │
+│   ├── auth/
+│   ├── dashboard/
+│
+├── components/
+│   ├── Auth/
+│   ├── Dashboard/
+│   ├── Kelas/
+│   ├── Keuangan/
+│   ├── Siswa/
+│   │
+│   ├── Layout/                 # Hanya untuk komponen tata letak utama
+│   │   ├── AppLayout.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── Topbar.tsx
+│   │
+│   ├── shared/                 # komponen reusable non-layout
+│   │   ├── CurrencyInput.tsx
+│   │   ├── DeleteDialog.tsx
+│   │   ├── ExportLaporanDialog.tsx
+│   │   └── LaporanPreviewDialog.tsx
+│   │
+│   └── ui/
+│       └── (komponen shadcn/ui)
+│
+└── lib/
+    ├── api.ts                  # api helper
+    ├── auth.ts                 # auth
+    ├── contexts/               # React Contexts
+    │   └── AuthContext.tsx
+    ├── db.ts                   # db utils eg.prisma
+    ├── types.ts                # declaration types
+    ├── utils.ts                # helper
+    └── validation.ts           # validation schema (zod)
+```
+
+## 🔐 Login Credentials
+
+Setelah database di-seed, gunakan akun berikut untuk login:
+
+**Admin:**
+
+- Email: `admin@sekolah.com`
+- Password: `password123`
+
+**Guru:**
+
+- Email: `guru@sekolah.com`
+- Password: `password123`
 
 <!-- OLD BOY -->
 <!-- # 🏫 SMKN 9 KOLAKA - Dashboard Manajemen Sekolah
@@ -186,20 +265,6 @@ npm run dev
 ```
 
 Buka [http://localhost:3000](http://localhost:3000) untuk melihat aplikasi! 🎉
-
-## 🔐 Login Credentials
-
-Setelah database di-seed, gunakan akun berikut untuk login:
-
-**Admin:**
-
-- Email: `admin@sekolah.com`
-- Password: `password123`
-
-**Guru:**
-
-- Email: `guru@sekolah.com`
-- Password: `password123`
 
 ## 📱 Fitur yang Tersedia
 
@@ -262,31 +327,6 @@ Setelah database di-seed, gunakan akun berikut untuk login:
 - **UI**: Tailwind CSS + Shadcn/UI
 - **Charts**: Recharts
 - **Auth**: JWT + bcryptjs
-
-## 📁 Struktur Project
-
-```
-app/
-├── api/              # Backend API Routes
-│   ├── auth/         # Login/Register endpoints
-│   ├── siswa/        # Siswa CRUD API
-│   ├── kelas/        # Kelas CRUD API
-│   └── pelanggaran/  # Pelanggaran CRUD API
-├── auth/             # Login/Register pages
-└── dashboard/        # Dashboard pages
-
-components/           # React Components
-├── Dashboard/        # Charts & analytics
-├── Siswa/           # Student management
-├── Kelas/           # Class management
-├── Pelanggaran/     # Violation tracking
-└── ui/              # UI components
-
-prisma/              # Database
-├── schema.prisma    # Database schema
-├── migrations/      # Database migrations
-└── seed.ts          # Sample data
-```
 
 ## 🔧 Commands
 
