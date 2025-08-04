@@ -36,6 +36,42 @@ Sebuah aplikasi dashboard modern yang dirancang untuk membantu administrasi TK M
 
 ---
 
+## 📖 Alur Kerja Aplikasi
+
+Berikut adalah alur kerja dasar untuk menggunakan fitur-fitur utama aplikasi:
+
+### Alur Keuangan
+
+Sistem ini menggunakan alur berbasis tagihan untuk akurasi maksimal.
+
+1.  **Buat Tagihan (Awal Bulan):**
+
+    - Buka **Keuangan → Tagihan**.
+    - Klik **"Buat Tagihan"** untuk men-generate SPP bulanan untuk satu atau semua kelas. Semua tagihan baru akan berstatus `BELUM LUNAS`.
+
+2.  **Catat Pembayaran:**
+
+    - Tetap di halaman **Tagihan**.
+    - Cari tagihan siswa yang akan membayar, klik menu aksi (...) lalu pilih **"Bayar Tagihan"**.
+    - Konfirmasi pembayaran. Status tagihan akan otomatis menjadi `LUNAS` dan catatan akan muncul di riwayat **Pemasukan**.
+
+3.  **Catat Pengeluaran:**
+    - Buka **Keuangan → Pengeluaran**.
+    - Klik **"Tambah Pengeluaran"** untuk mencatat biaya operasional seperti ATK atau gaji.
+
+### Manajemen Siswa
+
+1.  **Tambah Kelas Dahulu:** Pastikan kelas sudah dibuat di menu **Manajemen → Kelas**.
+2.  **Tambah Siswa Baru:** Buka **Manajemen → Siswa** dan klik **"Tambah Siswa"**. Saat siswa baru berhasil dibuat, tagihan SPP pertama untuk bulan berjalan akan dibuat secara otomatis.
+
+### Laporan
+
+1.  **Buka Halaman Laporan:** Pergi ke halaman yang laporannya ingin diunduh (misal: **Keuangan → Pemasukan** atau **Dashboard Keuangan**).
+2.  **Klik "Unduh Laporan":** Sebuah dialog akan muncul.
+3.  **Pilih Periode & Format:** Pilih jenis laporan (Bulanan/Tahunan), tentukan periodenya, lalu pilih format (Excel/PDF) atau pratinjau untuk mencetak.
+
+---
+
 ## 🏁 Memulai
 
 Proyek ini dapat dijalankan dalam dua mode: mode pengembangan untuk _developer_ dan mode _deployment_ lokal untuk klien (admin sekolah).
@@ -145,6 +181,8 @@ Aplikasi ini dioptimalkan untuk _deployment_ di [Vercel](https://vercel.com/).
 
 4.  **Deploy:**
     Vercel akan secara otomatis melakukan _deployment_ setiap kali Anda melakukan `git push` ke _branch_ utama.\\
+
+---
 
 ## 📁 Struktur Project
 
