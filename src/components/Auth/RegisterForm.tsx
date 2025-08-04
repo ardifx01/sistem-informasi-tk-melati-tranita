@@ -79,7 +79,7 @@ export function RegisterForm({
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <img
-                  src="/icons/favicon-32x32.png"
+                  src="/icons/favicon.ico"
                   alt="Logo TK"
                   className="mx-auto h-14 w-14 mb-4"
                 />

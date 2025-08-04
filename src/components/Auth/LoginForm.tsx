@@ -79,7 +79,7 @@ export function LoginForm({
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <img
-                  src="/icons/favicon-32x32.png"
+                  src="/icons/favicon.ico"
                   alt="Logo TK"
                   className="mx-auto h-14 w-14 mb-4"
                 />
@@ -130,9 +130,9 @@ export function LoginForm({
                 <p>
                   <b>Admin:</b> admin@gmail.com / admin123
                 </p>
-                <p>
+                {/* <p>
                   <b>Guru:</b> guru@gmail.com / guru123
-                </p>
+                </p> */}
               </div>
             </div>
           </form>
