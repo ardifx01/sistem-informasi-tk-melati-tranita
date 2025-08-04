@@ -11,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { api, Kelas } from "@/lib/api";
+import { api } from "@/lib/api";
+import type { Kelas } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import {
