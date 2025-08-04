@@ -1,42 +1,8 @@
-import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
 export async function GET() {
   try {
-    // --- Menghitung Statistik Dasar ---
-    // Menggunakan Prisma transaction untuk efisiensi
-    const [
-      totalSiswa,
-      totalKelas,
-      totalUser,
-      totalPemasukan, // Menjumlahkan nominal, bukan hanya hitungan
-      totalPengeluaran, // Menjumlahkan nominal, bukan hanya hitungan
-      siswaBelumBayar,
-    ] = await prisma.$transaction([
-      prisma.siswa.count(),
-      prisma.kelas.count(),
-      prisma.user.count(),
-      prisma.pemasukan.aggregate({
-        _sum: {
-          jumlah: true,
-        },
-      }),
-      prisma.pengeluaran.aggregate({
-        _sum: {
-          jumlah: true,
-        },
-      }),
-
-      prisma.tagihan.groupBy({
-        by: ["siswaId"],
-        where: {
-          status: "BELUM_LUNAS",
-        },
-        orderBy: undefined,
-      }),
-    ]);
-
-    // --- Menghitung Statistik Bulanan ---
     const currentDate = new Date();
     const startOfMonth = new Date(
       currentDate.getFullYear(),
@@ -52,100 +18,68 @@ export async function GET() {
       59
     );
 
-    const [pemasukanBulanIni, pengeluaranBulanIni] = await prisma.$transaction([
+    const [
+      totalSiswa,
+      totalKelas,
+      totalUser,
+      totalPemasukan,
+      totalPengeluaran,
+      siswaBelumBayar,
+      pemasukanBulanIni,
+      pengeluaranBulanIni,
+      kategoriPengeluaranStats,
+      recentPemasukan,
+      recentPengeluaran,
+      // Query baru untuk tunggakan teratas
+      tunggakanTeratas,
+    ] = await prisma.$transaction([
+      prisma.siswa.count(),
+      prisma.kelas.count(),
+      prisma.user.count(),
+      prisma.pemasukan.aggregate({ _sum: { jumlah: true } }),
+      prisma.pengeluaran.aggregate({ _sum: { jumlah: true } }),
+      prisma.tagihan.groupBy({
+        by: ["siswaId"],
+        where: { status: "BELUM_LUNAS" },
+        orderBy: undefined,
+      }),
       prisma.pemasukan.aggregate({
         _sum: { jumlah: true },
-        where: {
-          tanggal: {
-            gte: startOfMonth,
-            lte: endOfMonth,
-          },
-        },
+        where: { tanggal: { gte: startOfMonth, lte: endOfMonth } },
       }),
       prisma.pengeluaran.aggregate({
         _sum: { jumlah: true },
-        where: {
-          tanggal: {
-            gte: startOfMonth,
-            lte: endOfMonth,
-          },
-        },
+        where: { tanggal: { gte: startOfMonth, lte: endOfMonth } },
       }),
-    ]);
-
-    // --- Menghitung Statistik Distribusi ---
-    const [
-      genderStats,
-      classStats,
-      kategoriPengeluaranStats,
-      kategoriPemasukanStats,
-    ] = await prisma.$transaction([
-      // Distribusi Gender Siswa
-      prisma.siswa.groupBy({
-        by: ["jenisKelamin"],
-        _count: {
-          jenisKelamin: true,
-        },
-        orderBy: undefined,
-      }),
-
-      // Distribusi Siswa per Kelas
-      prisma.kelas.findMany({
-        include: {
-          _count: {
-            select: { siswa: true },
-          },
-        },
-      }),
-
-      // Distribusi Pengeluaran per Kategori
       prisma.pengeluaran.groupBy({
         by: ["kategori"],
-        _sum: {
-          jumlah: true,
-        },
+        _sum: { jumlah: true },
         orderBy: undefined,
       }),
-
-      // Distribusi Pemasukan per Kategori
-      prisma.pemasukan.groupBy({
-        by: ["kategori"],
-        _sum: {
-          jumlah: true,
-        },
-        orderBy: undefined,
-      }),
-    ]);
-
-    // --- Mengambil Transaksi Terbaru (5 Pemasukan & 5 Pengeluaran) ---
-    const [recentPemasukan, recentPengeluaran] = await prisma.$transaction([
       prisma.pemasukan.findMany({
         take: 5,
         orderBy: { tanggal: "desc" },
         include: {
-          tagihan: {
-            include: {
-              siswa: { select: { nama: true } },
-            },
-          },
+          tagihan: { include: { siswa: { select: { nama: true } } } },
         },
       }),
-
-      prisma.pengeluaran.findMany({
+      prisma.pengeluaran.findMany({ take: 5, orderBy: { tanggal: "desc" } }),
+      // Mengambil 5 tagihan terlama yang belum lunas
+      prisma.tagihan.findMany({
+        where: { status: "BELUM_LUNAS", tanggalJatuhTempo: { lt: new Date() } },
+        orderBy: { tanggalJatuhTempo: "asc" },
         take: 5,
-        orderBy: { tanggal: "desc" },
+        include: { siswa: { select: { nama: true } } },
       }),
     ]);
 
-    // Menggabungkan dan mengurutkan transaksi terbaru
     const recentTransactions = [
-      ...recentPemasukan.map((p) => ({ ...p, type: "pemasukan" })),
-      ...recentPengeluaran.map((p) => ({ ...p, type: "pengeluaran" })),
+      ...recentPemasukan.map((p) => ({ ...p, type: "pemasukan" as const })),
+      ...recentPengeluaran.map((p) => ({ ...p, type: "pengeluaran" as const })),
     ]
       .sort((a, b) => b.tanggal.getTime() - a.tanggal.getTime())
       .slice(0, 10);
 
-    // --- Menyusun Objek Statistik Final ---
     const stats = {
       overview: {
         totalSiswa,
@@ -160,32 +94,11 @@ export async function GET() {
         pengeluaranBulanIni: pengeluaranBulanIni._sum.jumlah || 0,
         totalSiswaBelumBayar: siswaBelumBayar.length,
       },
-
-      genderDistribution: genderStats.map((stat: any) => ({
-        gender: stat.jenisKelamin,
-        count: stat._count.jenisKelamin,
+      kategoriPengeluaranDistribution: kategoriPengeluaranStats.map((stat) => ({
+        kategori: stat.kategori,
+        total: stat._sum?.jumlah || 0,
       })),
-
-      classDistribution: classStats.map((kelas) => ({
-        nama: kelas.nama,
-        count: kelas._count.siswa,
-      })),
-
-      kategoriPemasukanDistribution: kategoriPemasukanStats.map(
-        (stat: any) => ({
-          kategori: stat.kategori,
-          total: stat._sum.jumlah || 0,
-        })
-      ),
-
-      kategoriPengeluaranDistribution: kategoriPengeluaranStats.map(
-        (stat: any) => ({
-          kategori: stat.kategori,
-          total: stat._sum.jumlah || 0,
-        })
-      ),
-
-      recentTransactions: recentTransactions.map((trx: any) => ({
+      recentTransactions: recentTransactions.map((trx) => ({
         id: trx.id,
         tanggal: trx.tanggal,
         jumlah: trx.jumlah,
@@ -194,6 +107,13 @@ export async function GET() {
             ? `Pembayaran dari ${trx.tagihan.siswa.nama}`
             : trx.keterangan,
         type: trx.type,
+      })),
+      tunggakanTeratas: tunggakanTeratas.map((t) => ({
+        id: t.id,
+        keterangan: t.keterangan,
+        jumlahTagihan: t.jumlahTagihan,
+        siswa: { nama: t.siswa.nama },
+        tanggalJatuhTempo: t.tanggalJatuhTempo,
       })),
     };
 
