@@ -53,7 +53,7 @@ export function SiswaChart() {
 
   if (loading) {
     return (
-      <Card className="col-auto">
+      <Card className="col-span-3">
         <CardHeader>
           <CardTitle>Jumlah Siswa Per Kelas</CardTitle>
           <CardDescription>Loading...</CardDescription>
@@ -68,7 +68,7 @@ export function SiswaChart() {
   }
 
   return (
-    <Card className="col-auto">
+    <Card className="col-span-3">
       <CardHeader>
         <CardTitle>Jumlah Siswa Per Kelas</CardTitle>
         <CardDescription>Distribusi siswa di setiap kelas</CardDescription>

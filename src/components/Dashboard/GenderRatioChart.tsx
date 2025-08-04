@@ -54,7 +54,7 @@ export function GenderRatioChart() {
 
   if (loading) {
     return (
-      <Card className="col-auto">
+      <Card className="col-span-2">
         <CardHeader>
           <CardTitle>Rasio Jenis Kelamin</CardTitle>
           <CardDescription>Loading...</CardDescription>
@@ -68,7 +68,7 @@ export function GenderRatioChart() {
     );
   }
   return (
-    <Card className="col-auto">
+    <Card className="col-span-2">
       <CardHeader>
         <CardTitle>Rasio Jenis Kelamin</CardTitle>
         <CardDescription>
