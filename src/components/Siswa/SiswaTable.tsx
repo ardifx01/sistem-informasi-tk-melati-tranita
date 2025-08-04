@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Impor useRouter untuk navigasi
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,30 +20,83 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Eye, ArrowUpDown } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa as SiswaType } from "@/lib/types";
 import { DeleteDialog } from "@/components/Layout/DeleteDialog";
 import { EditSiswaDialog } from "./EditSiswaDialog";
 import { toast } from "sonner";
 
-// Perbarui tipe lokal untuk menyertakan jumlahTunggakan
 interface SiswaWithTunggakan extends SiswaType {
   jumlahTunggakan: number;
 }
 
+type SortableKeys = "nis" | "nama" | "kelas";
+
 interface SiswaTableProps {
   data: SiswaWithTunggakan[];
   onDataChanged?: () => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (direction: "next" | "prev") => void;
+  startIndex: number; // Prop baru untuk nomor awal
 }
 
-export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
-  const router = useRouter(); // Inisialisasi router
+export function SiswaTable({
+  data,
+  onDataChanged,
+  currentPage,
+  totalPages,
+  onPageChange,
+  startIndex,
+}: SiswaTableProps) {
+  const router = useRouter();
   const [editSiswa, setEditSiswa] = useState<SiswaType | null>(null);
   const [deleteSiswa, setDeleteSiswa] = useState<SiswaType | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{
+    key: SortableKeys;
+    direction: "asc" | "desc";
+  } | null>({ key: "nama", direction: "asc" });
+
+  const sortedData = useMemo(() => {
+    let sortableItems = [...data];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue, bValue;
+        if (sortConfig.key === "kelas") {
+          aValue = typeof a.kelas === "object" ? a.kelas.nama : "";
+          bValue = typeof b.kelas === "object" ? b.kelas.nama : "";
+        } else {
+          aValue = a[sortConfig.key];
+          bValue = b[sortConfig.key];
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [data, sortConfig]);
+
+  const requestSort = (key: SortableKeys) => {
+    let direction: "asc" | "desc" = "asc";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   const handleEdit = (siswa: SiswaType) => {
     setEditSiswa(siswa);
@@ -56,7 +110,6 @@ export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
 
   const confirmDelete = async () => {
     if (!deleteSiswa) return;
-
     setIsDeleting(true);
     try {
       await api.deleteSiswa(deleteSiswa.id);
@@ -73,7 +126,6 @@ export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
     }
   };
 
-  // Fungsi untuk navigasi ke halaman detail siswa
   const handleView = (id: string) => {
     router.push(`/dashboard/siswa/${id}`);
   };
@@ -90,19 +142,35 @@ export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>NIS</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>Kelas</TableHead>
+              <TableHead className="w-[50px]">No.</TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => requestSort("nis")}>
+                  NIS <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => requestSort("nama")}>
+                  Nama <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => requestSort("kelas")}>
+                  Kelas <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
               <TableHead>Jenis Kelamin</TableHead>
               <TableHead>Status Pembayaran</TableHead>
               <TableHead className="w-[100px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length > 0 ? (
-              data.map((siswa) => (
+            {sortedData.length > 0 ? (
+              sortedData.map((siswa, index) => (
                 <TableRow key={siswa.id}>
-                  <TableCell className="font-medium">{siswa.nis}</TableCell>
+                  <TableCell className="font-medium">
+                    {startIndex + index + 1}
+                  </TableCell>
+                  <TableCell>{siswa.nis}</TableCell>
                   <TableCell>{siswa.nama}</TableCell>
                   <TableCell>
                     {typeof siswa.kelas === "string"
@@ -137,7 +205,6 @@ export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {/* Item "Lihat Detail" sekarang aktif */}
                         <DropdownMenuItem onClick={() => handleView(siswa.id)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Lihat Detail
@@ -162,7 +229,7 @@ export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data siswa yang ditemukan.
@@ -170,6 +237,35 @@ export function SiswaTable({ data, onDataChanged }: SiswaTableProps) {
               </TableRow>
             )}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={7}>
+                <div className="flex items-center justify-end space-x-4">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Halaman {currentPage} dari {totalPages}
+                  </span>
+                  <div className="space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onPageChange("prev")}
+                      disabled={currentPage === 1}
+                    >
+                      Sebelumnya
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onPageChange("next")}
+                      disabled={currentPage === totalPages}
+                    >
+                      Selanjutnya
+                    </Button>
+                  </div>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </div>
 
