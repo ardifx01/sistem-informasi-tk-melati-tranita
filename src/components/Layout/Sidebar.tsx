@@ -13,6 +13,8 @@ import {
   HandCoins,
   CreditCard,
   LucideIcon,
+  ChartNoAxesCombined,
+  BarChartHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -51,7 +53,7 @@ const navigationItems: NavigationItem[] = [
   { type: "label", name: "Utama" },
   {
     type: "link",
-    name: "Dashboard",
+    name: "Dashboard Utama",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
@@ -73,6 +75,11 @@ const navigationItems: NavigationItem[] = [
     name: "Keuangan",
     icon: Wallet,
     subItems: [
+      {
+        name: "Ringkasan",
+        href: "/dashboard/keuangan",
+        icon: BarChartHorizontal,
+      },
       {
         name: "Tagihan",
         href: "/dashboard/keuangan/tagihan",
@@ -101,7 +108,7 @@ export function SidebarContent() {
       {/* Header Sidebar */}
       <div className="flex h-16 shrink-0 items-center border-b px-6">
         <Link href="/" className="flex items-center gap-3">
-          <img src="/icons/favicon-32x32.png" alt="Logo Sekolah" />
+          <img src="/icons/favicon/favicon-32x32.png" alt="Logo Sekolah" />
           <span className="text-base font-bold text-foreground">
             TK Melati Tranita
           </span>
