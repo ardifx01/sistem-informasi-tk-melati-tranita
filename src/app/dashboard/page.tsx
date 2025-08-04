@@ -3,20 +3,11 @@
 import { useState, useEffect } from "react";
 import { StatCard } from "@/components/Dashboard/StatCard";
 import { TrenKeuangan } from "@/components/Dashboard/TrenKeuangan";
-import { SiswaChart } from "@/components/Dashboard/SiswaChart";
-import { GenderRatioChart } from "@/components/Dashboard/GenderRatioChart";
+import { RecentTransactions } from "@/components/Keuangan/Dashboard/RecentTransactions";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Users,
-  Wallet,
-  BanknoteArrowDown,
-  BanknoteArrowUp,
-  UserX,
-} from "lucide-react";
+import { Users, Wallet, BanknoteArrowUp, UserX } from "lucide-react";
 import { api } from "@/lib/api";
 import type { DashboardStats } from "@/lib/types";
-import { KategoriPengeluaranChart } from "@/components/Keuangan/KategoriPengeluaranChart";
-import { RecentTransactions } from "@/components/Keuangan/RecentTransaction";
 
 // Komponen Skeleton untuk tampilan loading
 function DashboardSkeleton() {
@@ -31,12 +22,11 @@ function DashboardSkeleton() {
           <Skeleton key={index} className="h-28 w-full" />
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+      {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <Skeleton className="h-[400px] w-full rounded-lg lg:col-span-3" />
         <Skeleton className="h-[400px] w-full rounded-lg lg:col-span-2" />
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-[400px] w-full rounded-lg" />
+      </div> */}
+      <div className="grid grid-cols-1 gap-6">
         <Skeleton className="h-[400px] w-full rounded-lg" />
       </div>
       <Skeleton className="h-72 w-full" />
@@ -79,14 +69,13 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Kartu Statistik Utama */}
+      {/* Kartu Statistik Utama (Paling Penting) */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Siswa"
           value={stats.overview.totalSiswa}
           icon={Users}
           description="Jumlah siswa aktif terdaftar"
-          className="text-gray-600 border-gray-600"
         />
         <StatCard
           title="Siswa Belum Bayar"
@@ -108,30 +97,22 @@ export default function DashboardPage() {
           value={stats.overview.saldoSaatIni}
           icon={Wallet}
           description="Total kas yang tersedia"
-          className="text-violet-600 border-vioet-600"
           isCurrency
         />
       </div>
 
-      {/* Grafik Keuangan */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <TrenKeuangan />
-        </div>
-        <div className="lg:col-span-2">
-          <KategoriPengeluaranChart
-            data={stats.kategoriPengeluaranDistribution}
-          />
-        </div>
-      </div>
-
       {/* Grafik Siswa */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* <div className="grid gap-4 lg:grid-cols-2">
         <SiswaChart />
         <GenderRatioChart />
+      </div> */}
+
+      {/* Grafik Tren Keuangan (Gambaran Besar) */}
+      <div className="grid grid-cols-1 gap-6">
+        <TrenKeuangan />
       </div>
 
-      {/* Tabel Transaksi Terbaru */}
+      {/* Tabel Transaksi Terbaru (Aktivitas Terkini) */}
       <div>
         <RecentTransactions data={stats.recentTransactions} />
       </div>
