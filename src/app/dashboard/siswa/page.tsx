@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AddSiswaDialog } from "@/components/Siswa/AddSiswaDialog";
 import { SiswaTable } from "@/components/Siswa/SiswaTable";
 import {
@@ -27,7 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa as SiswaType, Kelas } from "@/lib/types";
 
@@ -37,22 +38,22 @@ interface SiswaWithTunggakan extends SiswaType {
   kelas: Kelas; // Pastikan tipe kelas adalah objek, bukan string
 }
 
+const ITEMS_PER_PAGE = 20; // Menetapkan batas data per halaman
+
 // Komponen Skeleton khusus untuk halaman ini
 function SiswaPageSkeleton() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Manajemen Siswa</h2>
-          <p className="text-muted-foreground">
-            Kelola data siswa, kelas, dan status pembayaran.
-          </p>
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="mt-2 h-4 w-80" />
         </div>
-        <AddSiswaDialog />
+        <Skeleton className="h-10 w-32 rounded-md" />
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Siswa</CardTitle>
+          <Skeleton className="h-7 w-40" />
           <Skeleton className="mt-2 h-4 w-48" />
           <div className="flex items-center gap-4 pt-4">
             <Skeleton className="h-10 flex-1 max-w-sm rounded-md" />
@@ -105,23 +106,21 @@ function SiswaPageSkeleton() {
 }
 
 export default function SiswaPage() {
-  const [siswa, setSiswa] = useState<SiswaWithTunggakan[]>([]);
+  const [allSiswa, setAllSiswa] = useState<SiswaWithTunggakan[]>([]);
   const [kelas, setKelas] = useState<Kelas[]>([]);
-  const [filteredSiswa, setFilteredSiswa] = useState<SiswaWithTunggakan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedKelas, setSelectedKelas] = useState("all"); // State untuk filter kelas
+  const [selectedKelas, setSelectedKelas] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      // Ambil data siswa dan kelas secara bersamaan
       const [siswaData, kelasData] = await Promise.all([
         api.getSiswa(),
-        api.getKelas(), // Pastikan Anda memiliki fungsi ini di lib/api.ts
+        api.getKelas(),
       ]);
-      setSiswa(siswaData as SiswaWithTunggakan[]);
-      setFilteredSiswa(siswaData as SiswaWithTunggakan[]);
+      setAllSiswa(siswaData as SiswaWithTunggakan[]);
       setKelas(kelasData);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -134,15 +133,11 @@ export default function SiswaPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    let filtered = siswa;
-
-    // 1. Filter berdasarkan kelas yang dipilih
+  const filteredSiswa = useMemo(() => {
+    let filtered = allSiswa;
     if (selectedKelas !== "all") {
       filtered = filtered.filter((s) => s.kelasId === selectedKelas);
     }
-
-    // 2. Kemudian, filter berdasarkan kata kunci pencarian
     if (searchTerm) {
       filtered = filtered.filter(
         (s) =>
@@ -150,9 +145,35 @@ export default function SiswaPage() {
           s.nis.includes(searchTerm)
       );
     }
+    return filtered;
+  }, [searchTerm, selectedKelas, allSiswa]);
 
-    setFilteredSiswa(filtered);
-  }, [searchTerm, selectedKelas, siswa]);
+  // Logika paginasi
+  const totalPages = Math.ceil(filteredSiswa.length / ITEMS_PER_PAGE) || 1;
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredSiswa.slice(startIndex, endIndex);
+  }, [currentPage, filteredSiswa]);
+
+  const handlePageChange = (direction: "next" | "prev") => {
+    setCurrentPage((prev) => {
+      if (direction === "next" && prev < totalPages) return prev + 1;
+      if (direction === "prev" && prev > 1) return prev - 1;
+      return prev;
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSelectedKelas("all");
+    setCurrentPage(1);
+  };
+
+  // Reset halaman ke 1 setiap kali filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedKelas]);
 
   if (loading) {
     return <SiswaPageSkeleton />;
@@ -174,9 +195,10 @@ export default function SiswaPage() {
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
           <CardDescription>
-            Total {filteredSiswa.length} dari {siswa.length} siswa ditampilkan.
+            Total {filteredSiswa.length} dari {allSiswa.length} siswa
+            ditampilkan.
           </CardDescription>
-          <div className="flex flex-col gap-4 pt-4 sm:flex-row">
+          <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
             <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -199,10 +221,25 @@ export default function SiswaPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="ghost"
+              onClick={handleResetFilters}
+              className="sm:ml-auto"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <SiswaTable data={filteredSiswa} onDataChanged={loadData} />
+          <SiswaTable
+            data={paginatedData}
+            onDataChanged={loadData}
+            startIndex={(currentPage - 1) * ITEMS_PER_PAGE}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </CardContent>
       </Card>
     </div>
