@@ -76,11 +76,13 @@ export async function POST(request: Request) {
       // Langkah 2: Buat tagihan SPP pertama untuk siswa tersebut
       const currentDate = new Date();
       const bulanIni = format(currentDate, "MMMM yyyy", { locale: localeID });
+
+      // Mengatur jatuh tempo ke akhir bulan saat ini
       const jatuhTempo = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
-        10
-      ); // Jatuh tempo tgl 10 bulan depan
+        0
+      );
 
       await tx.tagihan.create({
         data: {
