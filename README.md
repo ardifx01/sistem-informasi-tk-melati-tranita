@@ -249,7 +249,7 @@ src/
     └── validation.ts           # validation schema (zod)
 ```
 
-## 🔐 Login Credentials
+<!-- ## 🔐 Login Credentials
 
 Setelah database di-seed, gunakan akun berikut untuk login:
 
@@ -261,7 +261,7 @@ Setelah database di-seed, gunakan akun berikut untuk login:
 **Guru:**
 
 - Email: `guru@sekolah.com`
-- Password: `password123`
+- Password: `password123` -->
 
 <!-- OLD BOY -->
 <!-- # 🏫 SMKN 9 KOLAKA - Dashboard Manajemen Sekolah
