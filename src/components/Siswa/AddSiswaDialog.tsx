@@ -42,7 +42,8 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { api, type Kelas } from "@/lib/api";
+import { api } from "@/lib/api";
+import type { Kelas } from "@/lib/types";
 import { createSiswaSchema } from "@/lib/validations";
 
 // Tipe untuk nilai form, diambil dari skema Zod
