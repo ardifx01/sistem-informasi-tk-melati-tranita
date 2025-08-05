@@ -186,6 +186,7 @@ export default function KeuanganDashboardPage() {
           icon={Wallet}
           description="Total kas yang tersedia"
           isCurrency
+          className="text-violet-600 border-violet-600"
         />
         <StatCard
           title="Pemasukan Bulan Ini"
@@ -193,7 +194,7 @@ export default function KeuanganDashboardPage() {
           icon={BanknoteArrowUp}
           description="Total pemasukan bulan ini"
           isCurrency
-          className="text-green-600"
+          className="text-green-600 border-green-600"
         />
         <StatCard
           title="Pengeluaran Bulan Ini"
@@ -201,14 +202,14 @@ export default function KeuanganDashboardPage() {
           icon={BanknoteArrowDown}
           description="Total pengeluaran bulan ini"
           isCurrency
-          className="text-orange-600"
+          className="text-orange-600 border-orange-600"
         />
         <StatCard
           title="Siswa Belum Bayar"
           value={stats.overview.totalSiswaBelumBayar}
           icon={UserX}
           description="Siswa dengan tunggakan"
-          className="text-red-600"
+          className="text-red-600 border-red-600"
         />
       </div>
 

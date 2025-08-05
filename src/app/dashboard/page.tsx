@@ -76,6 +76,7 @@ export default function DashboardPage() {
           value={stats.overview.totalSiswa}
           icon={Users}
           description="Jumlah siswa aktif terdaftar"
+          className="text-gray-900 border-gray-900"
         />
         <StatCard
           title="Siswa Belum Bayar"
@@ -98,6 +99,7 @@ export default function DashboardPage() {
           icon={Wallet}
           description="Total kas yang tersedia"
           isCurrency
+          className="text-violet-600 border-violet-600"
         />
       </div>
 
