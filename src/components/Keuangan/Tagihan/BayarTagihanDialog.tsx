@@ -34,6 +34,7 @@ import {
 import { api } from "@/lib/api";
 import type { Tagihan, KategoriPemasukan } from "@/lib/types";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import { mutate } from "swr";
 
 // Skema validasi untuk form pembayaran
 const createPemasukanSchema = z.object({
@@ -92,6 +93,11 @@ export function BayarTagihanDialog({
     try {
       await api.createPemasukan(values);
       toast.success("Pembayaran berhasil dicatat!");
+      mutate("/api/siswa");
+      mutate("/api/keuangan/tagihan");
+      mutate("/api/keuangan/pemasukan");
+      mutate("/api/dashboard/stats");
+
       onOpenChange(false);
       onPembayaranSuccess?.();
     } catch (error: any) {

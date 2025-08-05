@@ -45,6 +45,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import type { Kelas } from "@/lib/types";
 import { createSiswaSchema } from "@/lib/validation";
+import { mutate } from "swr";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type SiswaFormValues = z.infer<typeof createSiswaSchema>;
@@ -95,6 +96,7 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
       toast.success("Siswa baru berhasil ditambahkan!");
       form.reset();
       setOpen(false);
+      mutate("/api/kelas");
       onSiswaAdded?.();
     } catch (error: any) {
       console.error("Error creating siswa:", error);

@@ -13,14 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -31,16 +23,23 @@ import { Button } from "@/components/ui/button";
 import { Search, RotateCcw } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa as SiswaType, Kelas } from "@/lib/types";
+import useSWR from "swr";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-// Tipe data yang diterima dari API, sekarang menyertakan jumlah tunggakan
 interface SiswaWithTunggakan extends SiswaType {
   jumlahTunggakan: number;
-  kelas: Kelas; // Pastikan tipe kelas adalah objek, bukan string
+  kelas: Kelas;
 }
 
-const ITEMS_PER_PAGE = 20; // Menetapkan batas data per halaman
+const ITEMS_PER_PAGE = 20;
 
-// Komponen Skeleton khusus untuk halaman ini
 function SiswaPageSkeleton() {
   return (
     <div className="space-y-6">
@@ -105,35 +104,29 @@ function SiswaPageSkeleton() {
   );
 }
 
+// Definisikan fetcher untuk SWR
+const siswaFetcher = () => api.getSiswa();
+const kelasFetcher = (url: string) => api.getKelas();
+
 export default function SiswaPage() {
-  const [allSiswa, setAllSiswa] = useState<SiswaWithTunggakan[]>([]);
-  const [kelas, setKelas] = useState<Kelas[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: allSiswa,
+    error: siswaError,
+    isLoading: isSiswaLoading,
+  } = useSWR("/api/siswa", siswaFetcher as () => Promise<SiswaWithTunggakan[]>);
+
+  const {
+    data: kelas,
+    error: kelasError,
+    isLoading: isKelasLoading,
+  } = useSWR<Kelas[]>("/api/kelas", kelasFetcher);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedKelas, setSelectedKelas] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [siswaData, kelasData] = await Promise.all([
-        api.getSiswa(),
-        api.getKelas(),
-      ]);
-      setAllSiswa(siswaData as SiswaWithTunggakan[]);
-      setKelas(kelasData);
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const filteredSiswa = useMemo(() => {
+    if (!allSiswa) return [];
     let filtered = allSiswa;
     if (selectedKelas !== "all") {
       filtered = filtered.filter((s) => s.kelasId === selectedKelas);
@@ -148,13 +141,11 @@ export default function SiswaPage() {
     return filtered;
   }, [searchTerm, selectedKelas, allSiswa]);
 
-  // Logika paginasi
   const totalPages = Math.ceil(filteredSiswa.length / ITEMS_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return filteredSiswa.slice(startIndex, endIndex);
-  }, [currentPage, filteredSiswa]);
+    return filteredSiswa.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, filteredSiswa, startIndex]);
 
   const handlePageChange = (direction: "next" | "prev") => {
     setCurrentPage((prev) => {
@@ -170,13 +161,16 @@ export default function SiswaPage() {
     setCurrentPage(1);
   };
 
-  // Reset halaman ke 1 setiap kali filter berubah
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedKelas]);
 
-  if (loading) {
+  if (isSiswaLoading || isKelasLoading) {
     return <SiswaPageSkeleton />;
+  }
+
+  if (siswaError || kelasError) {
+    return <div>Gagal memuat data.</div>;
   }
 
   return (
@@ -188,14 +182,14 @@ export default function SiswaPage() {
             Kelola data siswa, kelas, dan status pembayaran.
           </p>
         </div>
-        <AddSiswaDialog onSiswaAdded={loadData} />
+        <AddSiswaDialog />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
           <CardDescription>
-            Total {filteredSiswa.length} dari {allSiswa.length} siswa
+            Total {filteredSiswa.length} dari {allSiswa?.length || 0} siswa
             ditampilkan.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
@@ -214,7 +208,7 @@ export default function SiswaPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Kelas</SelectItem>
-                {kelas.map((k) => (
+                {kelas?.map((k) => (
                   <SelectItem key={k.id} value={k.id} className="font-semibold">
                     Kelas {k.nama}
                   </SelectItem>
@@ -234,11 +228,10 @@ export default function SiswaPage() {
         <CardContent>
           <SiswaTable
             data={paginatedData}
-            onDataChanged={loadData}
-            startIndex={(currentPage - 1) * ITEMS_PER_PAGE}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
+            startIndex={startIndex}
           />
         </CardContent>
       </Card>

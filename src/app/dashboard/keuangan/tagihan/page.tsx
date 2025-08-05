@@ -24,8 +24,12 @@ import type { Tagihan, Kelas } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
 import { RotateCcw, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import useSWR from "swr";
 
 const ITEMS_PER_PAGE = 30; // Menetapkan batas data per halaman
+
+const tagihanFetcher = (url: string) => api.getTagihan();
+const kelasFetcher = (url: string) => api.getKelas();
 
 function TagihanPageSkeleton() {
   return (
@@ -56,9 +60,16 @@ function TagihanPageSkeleton() {
 }
 
 export default function TagihanPage() {
-  const [allTagihan, setAllTagihan] = useState<Tagihan[]>([]);
-  const [kelas, setKelas] = useState<Kelas[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: allTagihan,
+    error: tagihanError,
+    isLoading: isTagihanLoading,
+  } = useSWR<Tagihan[]>("/api/keuangan/tagihan", tagihanFetcher);
+  const {
+    data: kelas,
+    error: kelasError,
+    isLoading: isKelasLoading,
+  } = useSWR<Kelas[]>("/api/kelas", kelasFetcher);
 
   // State untuk filter
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,30 +80,11 @@ export default function TagihanPage() {
   // State baru untuk paginasi
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [tagihanData, kelasData] = await Promise.all([
-        api.getTagihan(),
-        api.getKelas(),
-      ]);
-      setAllTagihan(tagihanData);
-      setKelas(kelasData);
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const bulanOptions = useMemo(() => {
+    if (!allTagihan) return [];
     const bulanSet = new Set<string>();
-    allTagihan.forEach((t) => {
-      const date = new Date(t.tanggalJatuhTempo);
+    allTagihan.forEach((p) => {
+      const date = new Date(p.tanggalJatuhTempo);
       const bulanKey = `${getYear(date)}-${getMonth(date)}`;
       bulanSet.add(bulanKey);
     });
@@ -112,6 +104,8 @@ export default function TagihanPage() {
   }, [allTagihan]);
 
   const filteredTagihan = useMemo(() => {
+    if (!allTagihan) return [];
+
     let filteredData = allTagihan;
     if (selectedStatus !== "all") {
       filteredData = filteredData.filter(
@@ -175,7 +169,7 @@ export default function TagihanPage() {
     setCurrentPage(1);
   }, [selectedBulan, selectedKelas, selectedStatus, searchTerm]);
 
-  if (loading) {
+  if (isTagihanLoading || isKelasLoading) {
     return <TagihanPageSkeleton />;
   }
 
@@ -190,15 +184,15 @@ export default function TagihanPage() {
             Buat tagihan baru dan pantau status pembayaran siswa.
           </p>
         </div>
-        <AddTagihanDialog onTagihanAdded={loadData} />
+        <AddTagihanDialog />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Daftar Tagihan</CardTitle>
           <CardDescription>
-            Menampilkan {filteredTagihan.length} dari {allTagihan.length} total
-            tagihan.
+            Menampilkan {filteredTagihan.length} dari {allTagihan?.length || 0}
+            total tagihan.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
             <div className="relative w-full sm:max-w-xs">
@@ -231,7 +225,7 @@ export default function TagihanPage() {
               </SelectTrigger>
               <SelectContent className="max-h-48">
                 <SelectItem value="all">Semua Kelas</SelectItem>
-                {kelas.map((k) => (
+                {kelas?.map((k) => (
                   <SelectItem key={k.id} value={k.id}>
                     {k.nama}
                   </SelectItem>
@@ -262,7 +256,6 @@ export default function TagihanPage() {
         <CardContent>
           <TagihanTable
             data={paginatedData}
-            onDataChanged={loadData}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}

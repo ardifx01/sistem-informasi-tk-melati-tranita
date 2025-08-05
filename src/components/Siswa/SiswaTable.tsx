@@ -26,6 +26,7 @@ import type { Siswa as SiswaType } from "@/lib/types";
 import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { EditSiswaDialog } from "./EditSiswaDialog";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 interface SiswaWithTunggakan extends SiswaType {
   jumlahTunggakan: number;
@@ -114,6 +115,7 @@ export function SiswaTable({
     try {
       await api.deleteSiswa(deleteSiswa.id);
       toast.success(`Siswa "${deleteSiswa.nama}" berhasil dihapus.`);
+      mutate("/api/kelas");
       onDataChanged?.();
     } catch (error: any) {
       const errorMessage =

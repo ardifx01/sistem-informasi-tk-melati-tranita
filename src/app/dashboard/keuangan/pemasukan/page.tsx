@@ -28,8 +28,12 @@ import {
   type ExportColumn,
 } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
+import useSWR from "swr";
 
 const ITEMS_PER_PAGE = 30; // Batas data per halaman
+
+const pemasukanFetcher = (url: string) => api.getPemasukan();
+const kelasFetcher = (url: string) => api.getKelas();
 
 // Definisikan kolom untuk ekspor laporan pemasukan
 const pemasukanColumns: ExportColumn<Pemasukan>[] = [
@@ -75,9 +79,16 @@ function PemasukanPageSkeleton() {
 }
 
 export default function PemasukanPage() {
-  const [allPemasukan, setAllPemasukan] = useState<Pemasukan[]>([]);
-  const [kelas, setKelas] = useState<Kelas[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: allPemasukan,
+    error: pemasukanError,
+    isLoading: isPemasukanLoading,
+  } = useSWR<Pemasukan[]>("/api/keuangan/pemasukan", pemasukanFetcher);
+  const {
+    data: kelas,
+    error: kelasError,
+    isLoading: isKelasLoading,
+  } = useSWR<Kelas[]>("/api/kelas", kelasFetcher);
 
   // State untuk filter dan pencarian
   const [searchTerm, setSearchTerm] = useState("");
@@ -87,27 +98,8 @@ export default function PemasukanPage() {
   // State untuk paginasi
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [pemasukanData, kelasData] = await Promise.all([
-        api.getPemasukan(),
-        api.getKelas(),
-      ]);
-      setAllPemasukan(pemasukanData);
-      setKelas(kelasData);
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const bulanOptions = useMemo(() => {
+    if (!allPemasukan) return [];
     const bulanSet = new Set<string>();
     allPemasukan.forEach((p) => {
       const date = new Date(p.tanggal);
@@ -130,6 +122,8 @@ export default function PemasukanPage() {
   }, [allPemasukan]);
 
   const filteredPemasukan = useMemo(() => {
+    if (!allPemasukan) return [];
+
     let filteredData = allPemasukan;
 
     if (selectedKelas !== "all") {
@@ -182,7 +176,7 @@ export default function PemasukanPage() {
     setCurrentPage(1);
   }, [selectedBulan, selectedKelas, searchTerm]);
 
-  if (loading) {
+  if (isPemasukanLoading || isKelasLoading) {
     return <PemasukanPageSkeleton />;
   }
 
@@ -214,7 +208,8 @@ export default function PemasukanPage() {
         <CardHeader>
           <CardTitle>Daftar Transaksi</CardTitle>
           <CardDescription>
-            Menampilkan {filteredPemasukan.length} dari {allPemasukan.length}{" "}
+            Menampilkan {filteredPemasukan.length} dari
+            {allPemasukan?.length || 0}
             total transaksi.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
@@ -246,7 +241,7 @@ export default function PemasukanPage() {
               </SelectTrigger>
               <SelectContent className="max-h-48">
                 <SelectItem value="all">Semua Kelas</SelectItem>
-                {kelas.map((k) => (
+                {kelas?.map((k) => (
                   <SelectItem key={k.id} value={k.id}>
                     {k.nama}
                   </SelectItem>
@@ -266,7 +261,6 @@ export default function PemasukanPage() {
         <CardContent>
           <PemasukanTable
             data={paginatedData}
-            onDataChanged={loadData}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}

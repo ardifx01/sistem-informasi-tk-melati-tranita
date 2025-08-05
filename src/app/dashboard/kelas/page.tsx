@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { AppLayout } from "@/components/Layout/AppLayout";
 import { AddKelasDialog } from "@/components/Kelas/AddKelasDialog";
 import { KelasTable } from "@/components/Kelas/KelasTable";
 import {
@@ -23,6 +21,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import useSWR from "swr";
+
+const fetcher = (url: string) => api.getKelas();
 
 function KelasPageSkeleton() {
   return (
@@ -80,28 +81,19 @@ function KelasPageSkeleton() {
 }
 
 export default function KelasPage() {
-  const [kelas, setKelas] = useState<Kelas[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: kelas,
+    error,
+    isLoading,
+  } = useSWR<Kelas[]>("/api/kelas", fetcher);
 
-  const loadKelas = async () => {
-    try {
-      const data = await api.getKelas();
-      setKelas(data);
-    } catch (error) {
-      console.error("Error loading kelas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadKelas();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <KelasPageSkeleton />;
   }
 
+  if (error || !kelas) {
+    return <div>Gagal memuat data kelas.</div>;
+  }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -111,7 +103,7 @@ export default function KelasPage() {
             Kelola data kelas dan wali kelas.
           </p>
         </div>
-        <AddKelasDialog onKelasAdded={loadKelas} />
+        <AddKelasDialog />
       </div>
 
       <Card>
@@ -122,7 +114,7 @@ export default function KelasPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <KelasTable data={kelas} onDataChanged={loadKelas} />
+          <KelasTable data={kelas} />
         </CardContent>
       </Card>
     </div>

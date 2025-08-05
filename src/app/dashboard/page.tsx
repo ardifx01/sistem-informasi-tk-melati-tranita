@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { StatCard } from "@/components/Dashboard/StatCard";
 import { TrenKeuangan } from "@/components/Dashboard/TrenKeuangan";
 import { RecentTransactions } from "@/components/Keuangan/Dashboard/RecentTransactions";
@@ -8,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Wallet, BanknoteArrowUp, UserX } from "lucide-react";
 import { api } from "@/lib/api";
 import type { DashboardStats } from "@/lib/types";
+import useSWR from "swr";
 
 // Komponen Skeleton untuk tampilan loading
 function DashboardSkeleton() {
@@ -34,30 +34,27 @@ function DashboardSkeleton() {
   );
 }
 
+const fetcher = (url: string) => api.getDashboardStats();
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: stats,
+    error,
+    isLoading,
+  } = useSWR<DashboardStats>("/api/dashboard/stats", fetcher, {
+    refreshInterval: 30000, // Opsional: otomatis refresh setiap 30 detik
+  });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await api.getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <DashboardSkeleton />;
   }
 
-  if (!stats) {
-    return <div className="text-center">Gagal memuat data dashboard.</div>;
+  if (error || !stats) {
+    return (
+      <div className="text-center p-8">
+        Gagal memuat data dashboard. Coba muat ulang halaman.
+      </div>
+    );
   }
 
   return (

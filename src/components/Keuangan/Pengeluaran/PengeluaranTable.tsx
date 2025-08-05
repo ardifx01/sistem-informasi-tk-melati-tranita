@@ -25,6 +25,7 @@ import { formatDate } from "@/lib/utils";
 import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { toast } from "sonner";
 import { EditPengeluaranDialog } from "./EditPengeluaranDialog";
+import { mutate } from "swr";
 
 // Tipe data yang bisa di-sort
 type SortableKeys = "tanggal" | "keterangan" | "kategori" | "jumlah";
@@ -107,6 +108,7 @@ export function PengeluaranTable({
     try {
       await api.deletePengeluaran(deleteItem.id);
       toast.success("Data pengeluaran berhasil dihapus.");
+      mutate("/api/dashboard/stats");
       onDataChanged?.();
     } catch (error: any) {
       const errorMessage =
