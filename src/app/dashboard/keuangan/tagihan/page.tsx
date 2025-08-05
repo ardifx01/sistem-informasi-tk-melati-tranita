@@ -191,7 +191,7 @@ export default function TagihanPage() {
         <CardHeader>
           <CardTitle>Daftar Tagihan</CardTitle>
           <CardDescription>
-            Menampilkan {filteredTagihan.length} dari {allTagihan?.length || 0}
+            Menampilkan {filteredTagihan.length} dari {allTagihan?.length || 0}{" "}
             total tagihan.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">

@@ -208,7 +208,7 @@ export default function PemasukanPage() {
         <CardHeader>
           <CardTitle>Daftar Transaksi</CardTitle>
           <CardDescription>
-            Menampilkan {filteredPemasukan.length} dari
+            Menampilkan {filteredPemasukan.length} dari{" "}
             {allPemasukan?.length || 0}
             total transaksi.
           </CardDescription>
