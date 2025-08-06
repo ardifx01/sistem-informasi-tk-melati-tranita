@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { StatCard } from "@/components/Dashboard/StatCard";
-import { TrenKeuangan } from "@/components/Dashboard/TrenKeuangan";
+import { TrenKeuangan } from "@/components/Keuangan/Dashboard/TrenKeuangan";
 import { KategoriPengeluaranChart } from "@/components/Keuangan/Dashboard/KategoriPengeluaranChart";
 import { RecentTransactions } from "@/components/Keuangan/Dashboard/RecentTransactions";
 import { TunggakanTeratas } from "@/components/Keuangan/Dashboard/TunggakanTeratas";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Wallet,
   BanknoteArrowDown,
@@ -22,9 +24,9 @@ import {
   type ExportColumn,
 } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import useSWR from "swr";
 
+// Komponen Skeleton
 function KeuanganDashboardSkeleton() {
   return (
     <div className="space-y-6">
@@ -49,6 +51,7 @@ function KeuanganDashboardSkeleton() {
   );
 }
 
+// Definisi kolom untuk ekspor
 const pemasukanColumns: ExportColumn<Pemasukan>[] = [
   {
     header: "Tanggal",
@@ -77,12 +80,30 @@ const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
   { header: "Jumlah", accessor: (item) => item.jumlah },
 ];
 
-export default function KeuanganDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+// Fungsi fetcher untuk SWR
+const statsFetcher = (url: string) => api.getDashboardStats();
+const pemasukanFetcher = (url: string) => api.getPemasukan();
+const pengeluaranFetcher = (url: string) => api.getPengeluaran();
 
-  const [allPemasukan, setAllPemasukan] = useState<Pemasukan[]>([]);
-  const [allPengeluaran, setAllPengeluaran] = useState<Pengeluaran[]>([]);
+export default function KeuanganDashboardPage() {
+  // Menggunakan SWR untuk mengambil semua data yang dibutuhkan
+  const {
+    data: stats,
+    error: statsError,
+    isLoading: isLoadingStats,
+  } = useSWR<DashboardStats>("/api/dashboard/stats", statsFetcher);
+
+  const {
+    data: allPemasukan,
+    error: pemasukanError,
+    isLoading: isPemasukanLoading,
+  } = useSWR<Pemasukan[]>("/api/keuangan/pemasukan", pemasukanFetcher);
+
+  const {
+    data: allPengeluaran,
+    error: pengeluaranError,
+    isLoading: isLoadingPengeluaran,
+  } = useSWR<Pengeluaran[]>("/api/keuangan/pengeluaran", pengeluaranFetcher);
 
   const [showBackupReminder, setShowBackupReminder] = useState(false);
   const [reminderType, setReminderType] = useState<"bulanan" | "tahunan">(
@@ -92,42 +113,25 @@ export default function KeuanganDashboardPage() {
   useEffect(() => {
     const today = new Date();
     const dayOfMonth = today.getDate();
-    const month = today.getMonth(); // 0 = Januari, 11 = Desember
+    const month = today.getMonth();
 
-    // Tampilkan pengingat jika tanggal 25 ke atas
     if (dayOfMonth >= 25) {
       setShowBackupReminder(true);
-      // Jika bulan Desember, set pengingat menjadi tahunan
       if (month === 11) {
         setReminderType("tahunan");
       }
     }
-
-    const fetchAllData = async () => {
-      try {
-        // Ambil semua data yang dibutuhkan secara bersamaan
-        const [statsData, pemasukanData, pengeluaranData] = await Promise.all([
-          api.getDashboardStats(),
-          api.getPemasukan(),
-          api.getPengeluaran(),
-        ]);
-        setStats(statsData);
-        setAllPemasukan(pemasukanData);
-        setAllPengeluaran(pengeluaranData);
-      } catch (error) {
-        console.error("Error fetching financial data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllData();
   }, []);
 
-  if (loading) {
+  const isLoading =
+    isLoadingStats || isPemasukanLoading || isLoadingPengeluaran;
+  const hasError = statsError || pemasukanError || pengeluaranError;
+
+  if (isLoading) {
     return <KeuanganDashboardSkeleton />;
   }
 
-  if (!stats) {
+  if (hasError || !stats || !allPemasukan || !allPengeluaran) {
     return <div className="text-center">Gagal memuat data keuangan.</div>;
   }
 
@@ -162,7 +166,6 @@ export default function KeuanganDashboardPage() {
         </ExportLaporanDialog>
       </div>
 
-      {/* Pengingat Backup Dinamis */}
       {showBackupReminder && (
         <Alert className="border-yellow-500 bg-yellow-50 text-yellow-800">
           <Lightbulb className="h-5 w-5 !text-yellow-600" />
@@ -173,8 +176,7 @@ export default function KeuanganDashboardPage() {
           <AlertDescription>
             Ini adalah akhir {reminderType === "tahunan" ? "tahun" : "bulan"}.
             Kami sangat menyarankan Anda untuk mengunduh laporan keuangan
-            sebagai cadangan data. Gunakan fitur 'Unduh Laporan' untuk mengunduh
-            laporan anda.
+            sebagai cadangan data.
           </AlertDescription>
         </Alert>
       )}
@@ -215,7 +217,25 @@ export default function KeuanganDashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <TrenKeuangan />
+          <TunggakanTeratas
+            data={stats.tunggakanTeratas}
+            tunggakanTeratas={[]}
+            overview={{
+              totalSiswa: 0,
+              totalKelas: 0,
+              totalUser: 0,
+              totalPemasukan: 0,
+              totalPengeluaran: 0,
+              saldoSaatIni: 0,
+              pemasukanBulanIni: 0,
+              pengeluaranBulanIni: 0,
+              totalSiswaBelumBayar: 0,
+            }}
+            genderDistribution={[]}
+            classDistribution={[]}
+            kategoriPengeluaranDistribution={[]}
+            recentTransactions={[]}
+          />
         </div>
         <div className="lg:col-span-2">
           <KategoriPengeluaranChart
@@ -224,27 +244,12 @@ export default function KeuanganDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 ">
+        <TrenKeuangan />
+      </div>
+
+      <div className="grid grid-cols-1 ">
         <RecentTransactions data={stats.recentTransactions} />
-        <TunggakanTeratas
-          data={stats.tunggakanTeratas}
-          tunggakanTeratas={[]}
-          overview={{
-            totalSiswa: 0,
-            totalKelas: 0,
-            totalUser: 0,
-            totalPemasukan: 0,
-            totalPengeluaran: 0,
-            saldoSaatIni: 0,
-            pemasukanBulanIni: 0,
-            pengeluaranBulanIni: 0,
-            totalSiswaBelumBayar: 0,
-          }}
-          genderDistribution={[]}
-          classDistribution={[]}
-          kategoriPengeluaranDistribution={[]}
-          recentTransactions={[]}
-        />
       </div>
     </div>
   );

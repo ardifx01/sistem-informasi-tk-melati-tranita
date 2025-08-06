@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { createKelasSchema } from "@/lib/validation";
+import { mutate } from "swr";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type KelasFormValues = z.infer<typeof createKelasSchema>;
@@ -53,6 +54,9 @@ export function AddKelasDialog({ onKelasAdded }: AddKelasDialogProps) {
     try {
       await api.createKelas(values);
       toast.success("Kelas baru berhasil ditambahkan!");
+      mutate("api/kelas");
+      mutate("api/dasboard/stats");
+
       form.reset();
       setOpen(false);
       onKelasAdded?.();

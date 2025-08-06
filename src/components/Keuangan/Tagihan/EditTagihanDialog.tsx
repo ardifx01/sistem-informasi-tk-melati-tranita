@@ -37,6 +37,7 @@ import { api } from "@/lib/api";
 import type { Tagihan } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import { mutate } from "swr";
 
 // Skema validasi Zod untuk update tagihan
 const updateTagihanSchema = z.object({
@@ -82,6 +83,8 @@ export function EditTagihanDialog({
     try {
       await api.updateTagihan(tagihan.id, values);
       toast.success("Tagihan berhasil diperbarui!");
+      mutate("api/keuangan/tagihan");
+      mutate("api/siswa");
       onOpenChange(false);
       onTagihanUpdated?.();
     } catch (error) {

@@ -11,6 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -22,12 +23,13 @@ import {
 import { api } from "@/lib/api";
 import type { Pengeluaran, KategoriPengeluaran } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
-import { Download, RotateCcw } from "lucide-react";
+import { Download, Lightbulb, RotateCcw } from "lucide-react";
 import {
   ExportColumn,
   ExportLaporanDialog,
 } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
+import useSWR from "swr";
 
 const ITEMS_PER_PAGE = 30;
 
@@ -52,6 +54,8 @@ const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
   { header: "Jumlah", accessor: (item) => item.jumlah },
 ];
 
+const pengeluaranFetcher = (url: string) => api.getPengeluaran();
+
 function PengeluaranPageSkeleton() {
   return (
     <div className="space-y-6">
@@ -62,6 +66,15 @@ function PengeluaranPageSkeleton() {
         </div>
         <Skeleton className="h-10 w-40 rounded-md" />
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Informasi</AlertTitle>
+        <AlertDescription>
+          Gunakan halaman ini untuk mencatat semua transaksi pengeluaran,
+          seperti pembelian ATK, pembayaran listrik, atau gaji guru.
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <Skeleton className="h-7 w-40" />
@@ -79,8 +92,11 @@ function PengeluaranPageSkeleton() {
 }
 
 export default function PengeluaranPage() {
-  const [allPengeluaran, setAllPengeluaran] = useState<Pengeluaran[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: allPengeluaran,
+    error: pengeluaranError,
+    isLoading: isPengeluaranLoading,
+  } = useSWR<Pengeluaran[]>("/api/keuangan/pengeluaran", pengeluaranFetcher);
 
   // State untuk filter
   const [selectedBulan, setSelectedBulan] = useState<string>("all");
@@ -89,24 +105,10 @@ export default function PengeluaranPage() {
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadPengeluaran = async () => {
-    setLoading(true);
-    try {
-      const data = await api.getPengeluaran();
-      setAllPengeluaran(data);
-    } catch (error) {
-      console.error("Error loading pengeluaran:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPengeluaran();
-  }, []);
-
   // Membuat daftar bulan unik dari data pengeluaran
   const bulanOptions = useMemo(() => {
+    if (!allPengeluaran) return [];
+
     const bulanSet = new Set<string>();
     allPengeluaran.forEach((p) => {
       const date = new Date(p.tanggal);
@@ -130,6 +132,8 @@ export default function PengeluaranPage() {
 
   // Logika untuk memfilter data
   const filteredPengeluaran = useMemo(() => {
+    if (!allPengeluaran) return [];
+
     let filteredData = allPengeluaran;
 
     if (selectedBulan !== "all") {
@@ -180,8 +184,12 @@ export default function PengeluaranPage() {
     setCurrentPage(1);
   }, [selectedBulan, selectedKategori]);
 
-  if (loading) {
+  if (isPengeluaranLoading) {
     return <PengeluaranPageSkeleton />;
+  }
+
+  if (pengeluaranError) {
+    return <div className="text-center">Gagal memuat data pengeluaran</div>;
   }
 
   return (
@@ -207,15 +215,24 @@ export default function PengeluaranPage() {
               Unduh Laporan
             </Button>
           </ExportLaporanDialog>
-          <AddPengeluaranDialog onPengeluaranAdded={loadPengeluaran} />
+          <AddPengeluaranDialog />
         </div>
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Informasi</AlertTitle>
+        <AlertDescription>
+          Gunakan halaman ini untuk mencatat semua transaksi pengeluaran,
+          seperti pembelian ATK, pembayaran listrik, atau gaji guru.
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle>Daftar Transaksi</CardTitle>
           <CardDescription>
-            Menampilkan {filteredPengeluaran.length} dari{" "}
-            {allPengeluaran.length} total transaksi.
+            Menampilkan<strong> {filteredPengeluaran.length} </strong> dari{" "}
+            <strong> {allPengeluaran?.length || 0} </strong>total transaksi.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
             <Select value={selectedBulan} onValueChange={setSelectedBulan}>
@@ -260,7 +277,6 @@ export default function PengeluaranPage() {
         <CardContent>
           <PengeluaranTable
             data={paginatedData}
-            onDataChanged={loadPengeluaran}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}

@@ -44,6 +44,7 @@ import { api } from "@/lib/api";
 import type { Kelas, Siswa } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import { mutate } from "swr";
 
 // Skema validasi Zod
 const createTagihanSchema = z.object({
@@ -82,7 +83,6 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
     try {
       let siswaUntukTagihan: { id: string }[] = [];
 
-      // --- LOGIKA BARU ---
       // Cek apakah pengguna memilih "Semua Kelas"
       if (values.kelasId === "all") {
         // Jika ya, ambil semua siswa dari semua kelas
@@ -91,7 +91,6 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
         // Jika tidak, ambil siswa dari kelas yang spesifik
         siswaUntukTagihan = await api.getSiswaByKelas(values.kelasId);
       }
-      // --- AKHIR LOGIKA BARU ---
 
       if (siswaUntukTagihan.length === 0) {
         toast.error("Tidak ada siswa yang ditemukan untuk dibuatkan tagihan.");
@@ -107,6 +106,9 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
 
       await api.createTagihan(tagihanBaru);
       toast.success(`Berhasil membuat ${tagihanBaru.length} tagihan baru!`);
+      mutate("api/keuangan/tagihan");
+      mutate("/api/siswa");
+
       form.reset();
       setOpen(false);
       onTagihanAdded?.();

@@ -28,6 +28,7 @@ import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { BayarTagihanDialog } from "./BayarTagihanDialog";
 import { EditTagihanDialog } from "./EditTagihanDialog";
 import { cn } from "@/lib/utils";
+import { mutate } from "swr";
 
 interface TagihanTableProps {
   data: Tagihan[];
@@ -109,6 +110,8 @@ export function TagihanTable({
     try {
       await api.deleteTagihan(deleteTagihan.id);
       toast.success("Tagihan berhasil dihapus.");
+      mutate("api/keuangan/tagihan");
+      mutate("/api/siswa");
       onDataChanged?.();
     } catch (error: any) {
       const errorMessage =

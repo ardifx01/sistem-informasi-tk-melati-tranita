@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import type { Kelas } from "@/lib/types";
 import { updateKelasSchema } from "@/lib/validation";
-import { Label } from "../ui/label";
+import { mutate } from "swr";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type KelasFormValues = z.infer<typeof updateKelasSchema>;
@@ -71,6 +71,9 @@ export function EditKelasDialog({
     try {
       await api.updateKelas(kelas.id, values);
       toast.success("Data kelas berhasil diperbarui!");
+      mutate("api/kelas");
+      mutate("api/dasboard/stats");
+
       onOpenChange(false);
       onKelasUpdated?.();
     } catch (error: any) {
