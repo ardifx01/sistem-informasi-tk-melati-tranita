@@ -1,7 +1,7 @@
 "use client";
 
 import { StatCard } from "@/components/Dashboard/StatCard";
-import { TrenKeuangan } from "@/components/Dashboard/TrenKeuangan";
+import { TrenKeuangan } from "@/components/Keuangan/Dashboard/TrenKeuangan";
 import { RecentTransactions } from "@/components/Keuangan/Dashboard/RecentTransactions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Wallet, BanknoteArrowUp, UserX } from "lucide-react";
