@@ -27,7 +27,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -47,6 +46,7 @@ import type { KategoriPengeluaran } from "@/lib/types";
 import { createPengeluaranSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import { mutate } from "swr";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof createPengeluaranSchema>;
@@ -84,6 +84,11 @@ export function AddPengeluaranDialog({
     try {
       await api.createPengeluaran(values);
       toast.success("Data pengeluaran baru berhasil ditambahkan!");
+
+      // Beri tahu SWR untuk memuat ulang data yang relevan
+      mutate("/api/dashboard/stats");
+      mutate("/api/keuangan/pengeluaran");
+
       form.reset();
       setOpen(false);
       onPengeluaranAdded?.();

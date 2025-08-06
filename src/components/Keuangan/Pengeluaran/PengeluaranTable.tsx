@@ -108,7 +108,11 @@ export function PengeluaranTable({
     try {
       await api.deletePengeluaran(deleteItem.id);
       toast.success("Data pengeluaran berhasil dihapus.");
+
+      // Beri tahu SWR untuk memuat ulang data yang relevan
       mutate("/api/dashboard/stats");
+      mutate("/api/keuangan/pengeluaran");
+
       onDataChanged?.();
     } catch (error: any) {
       const errorMessage =

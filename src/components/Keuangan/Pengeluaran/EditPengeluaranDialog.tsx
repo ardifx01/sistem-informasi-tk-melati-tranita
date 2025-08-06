@@ -45,6 +45,7 @@ import type { Pengeluaran, KategoriPengeluaran } from "@/lib/types";
 import { updatePengeluaranSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
+import { mutate } from "swr";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof updatePengeluaranSchema>;
@@ -92,6 +93,9 @@ export function EditPengeluaranDialog({
     try {
       await api.updatePengeluaran(pengeluaran.id, values);
       toast.success("Data pengeluaran berhasil diperbarui!");
+      mutate("api/dashboard/stats");
+      mutate("dashboard/keuangan/pengeluaran");
+
       onOpenChange(false);
       onPengeluaranUpdated?.();
     } catch (error: any) {
