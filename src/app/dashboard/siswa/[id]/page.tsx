@@ -11,6 +11,7 @@ import type { Siswa } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { RiwayatTagihanTable } from "@/components/Siswa/RiwayatTagihanTable";
 import BackButton from "../../../../components/shared/BackButton";
+import { toast } from "sonner";
 
 // Komponen Skeleton untuk tampilan loading
 function SiswaDetailSkeleton() {
@@ -55,6 +56,7 @@ export default function SiswaDetailPage() {
           setSiswa(data);
         } catch (error) {
           console.error("Error fetching siswa details:", error);
+          toast.error("gagal memuat data. kemungkinan ada kesalahan server");
         } finally {
           setLoading(false);
         }

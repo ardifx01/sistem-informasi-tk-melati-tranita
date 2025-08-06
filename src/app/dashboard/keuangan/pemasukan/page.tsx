@@ -19,10 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/lib/api";
 import type { Pemasukan, Kelas } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
-import { Search, RotateCcw, Download } from "lucide-react";
+import { Search, RotateCcw, Download, Lightbulb } from "lucide-react";
 import {
   ExportLaporanDialog,
   type ExportColumn,
@@ -61,6 +62,15 @@ function PemasukanPageSkeleton() {
         <Skeleton className="h-9 w-64" />
         <Skeleton className="mt-2 h-4 w-80" />
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Halaman Riwayat</AlertTitle>
+        <AlertDescription>
+          Halaman ini menampilkan semua pemasukan yang sudah tercatat. Untuk
+          mencatat pemasukan baru, Anda harus melakukannya dengan{" "}
+          <b>membayar tagihan</b> melalui halaman <b>Manajemen Tagihan</b>.
+        </AlertDescription>
+      </Alert>
       <Card>
         <CardHeader>
           <Skeleton className="h-7 w-40" />
@@ -180,6 +190,14 @@ export default function PemasukanPage() {
     return <PemasukanPageSkeleton />;
   }
 
+  if (pemasukanError) {
+    return <div className="text-center">Gagal memuat data pemasukan</div>;
+  }
+
+  if (kelasError) {
+    return <div className="text-center">Gagal memuat data kelas </div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -204,12 +222,21 @@ export default function PemasukanPage() {
           </Button>
         </ExportLaporanDialog>
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Halaman Riwayat</AlertTitle>
+        <AlertDescription>
+          Halaman ini menampilkan semua pemasukan yang sudah tercatat. Untuk
+          mencatat pemasukan baru, Anda harus melakukannya dengan{" "}
+          <b>membayar tagihan</b> melalui halaman <b>Manajemen Tagihan</b>.
+        </AlertDescription>
+      </Alert>
       <Card>
         <CardHeader>
           <CardTitle>Daftar Transaksi</CardTitle>
           <CardDescription>
-            Menampilkan {filteredPemasukan.length} dari{" "}
-            {allPemasukan?.length || 0}
+            Menampilkan <strong> {filteredPemasukan.length}</strong> dari{" "}
+            <strong>{allPemasukan?.length || 0} </strong>
             total transaksi.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">

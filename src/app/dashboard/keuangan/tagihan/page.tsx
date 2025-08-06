@@ -19,10 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { api } from "@/lib/api";
 import type { Tagihan, Kelas } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
-import { RotateCcw, Search } from "lucide-react";
+import { Lightbulb, RotateCcw, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import useSWR from "swr";
 
@@ -41,6 +42,17 @@ function TagihanPageSkeleton() {
         </div>
         <Skeleton className="h-10 w-36 rounded-md" />
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Alur Kerja Pembayaran</AlertTitle>
+        <AlertDescription>
+          Ini adalah pusat manajemen pembayaran. <b>Buat tagihan</b> untuk siswa
+          terlebih dahulu, kemudian <b>bayar tagihan</b> tersebut dari menu aksi
+          di tabel. Pembayaran yang berhasil akan otomatis tercatat di halaman{" "}
+          <b>Riwayat Pemasukan</b>.
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <Skeleton className="h-7 w-40" />
@@ -173,6 +185,13 @@ export default function TagihanPage() {
     return <TagihanPageSkeleton />;
   }
 
+  if (tagihanError) {
+    return <div className="text-center">Gagal memuat data tagihan</div>;
+  }
+
+  if (kelasError) {
+    return <div className="text-center">Gagal memuat data kelas</div>;
+  }
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -186,13 +205,23 @@ export default function TagihanPage() {
         </div>
         <AddTagihanDialog />
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Alur Kerja Pembayaran</AlertTitle>
+        <AlertDescription>
+          Ini adalah pusat manajemen pembayaran. <b>Buat tagihan</b> untuk siswa
+          terlebih dahulu, kemudian <b>bayar tagihan</b> tersebut dari menu aksi
+          di tabel. Pembayaran yang berhasil akan otomatis tercatat di halaman{" "}
+          <b>Riwayat Pemasukan</b>.
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Daftar Tagihan</CardTitle>
           <CardDescription>
-            Menampilkan {filteredTagihan.length} dari {allTagihan?.length || 0}{" "}
-            total tagihan.
+            Menampilkan <strong>{filteredTagihan.length}</strong> dari{" "}
+            <strong> {allTagihan?.length || 0}</strong> total tagihan.
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
             <div className="relative w-full sm:max-w-xs">

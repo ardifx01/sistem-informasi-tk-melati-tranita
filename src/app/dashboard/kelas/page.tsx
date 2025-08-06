@@ -22,6 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import useSWR from "swr";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Lightbulb } from "lucide-react";
 
 const fetcher = (url: string) => api.getKelas();
 
@@ -37,6 +39,15 @@ function KelasPageSkeleton() {
         </div>
         <AddKelasDialog />
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Informasi</AlertTitle>
+        <AlertDescription>
+          Gunakan halaman ini untuk menambah atau mengedit kelas. Sebuah kelas
+          tidak dapat dihapus jika masih ada siswa yang terdaftar di dalamnya.
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle>Daftar Kelas</CardTitle>
@@ -92,7 +103,7 @@ export default function KelasPage() {
   }
 
   if (error || !kelas) {
-    return <div>Gagal memuat data kelas.</div>;
+    return <div className="text-center">Gagal memuat data kelas.</div>;
   }
   return (
     <div className="space-y-6">
@@ -105,6 +116,15 @@ export default function KelasPage() {
         </div>
         <AddKelasDialog />
       </div>
+
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Informasi</AlertTitle>
+        <AlertDescription>
+          Gunakan halaman ini untuk menambah atau mengedit kelas. Sebuah kelas
+          tidak dapat dihapus jika masih ada siswa yang terdaftar di dalamnya.
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardHeader>

@@ -169,8 +169,8 @@ export function SiswaTable({
             {sortedData.length > 0 ? (
               sortedData.map((siswa, index) => (
                 <TableRow key={siswa.id}>
-                  <TableCell className="font-medium">
-                    {startIndex + index + 1}
+                  <TableCell className="font-semibold">
+                    {startIndex + index + 1}.
                   </TableCell>
                   <TableCell>{siswa.nis}</TableCell>
                   <TableCell>{siswa.nama}</TableCell>

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, RotateCcw } from "lucide-react";
+import { Search, RotateCcw, Lightbulb } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa as SiswaType, Kelas } from "@/lib/types";
 import useSWR from "swr";
@@ -32,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SiswaWithTunggakan extends SiswaType {
   jumlahTunggakan: number;
@@ -50,6 +51,15 @@ function SiswaPageSkeleton() {
         </div>
         <Skeleton className="h-10 w-32 rounded-md" />
       </div>
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Informasi</AlertTitle>
+        <AlertDescription>
+          Ini adalah halaman untuk mengelola semua data siswa. Saat Anda
+          menambahkan siswa baru, sistem akan secara otomatis membuat tagihan
+          SPP pertama untuk bulan berjalan.
+        </AlertDescription>
+      </Alert>
       <Card>
         <CardHeader>
           <Skeleton className="h-7 w-40" />
@@ -170,7 +180,7 @@ export default function SiswaPage() {
   }
 
   if (siswaError || kelasError) {
-    return <div>Gagal memuat data.</div>;
+    return <div className="text-center">Gagal memuat data.</div>;
   }
 
   return (
@@ -184,7 +194,15 @@ export default function SiswaPage() {
         </div>
         <AddSiswaDialog />
       </div>
-
+      <Alert variant="info">
+        <Lightbulb className="h-4 w-4" />
+        <AlertTitle>Informasi</AlertTitle>
+        <AlertDescription>
+          Ini adalah halaman untuk mengelola semua data siswa. Saat Anda
+          menambahkan siswa baru, sistem akan secara otomatis membuat tagihan
+          SPP pertama untuk bulan berjalan.
+        </AlertDescription>
+      </Alert>
       <Card>
         <CardHeader>
           <CardTitle>Daftar Siswa</CardTitle>
