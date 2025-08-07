@@ -59,10 +59,14 @@ const pengeluaranFetcher = (url: string) => api.getPengeluaran();
 function PengeluaranPageSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center sm:justify-between">
         <div>
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="mt-2 h-4 w-80" />
+          <h2 className="text-3xl font-bold tracking-tight">
+            Manajemen Pengeluaran
+          </h2>
+          <p className="text-muted-foreground">
+            Catat semua biaya operasional dan pengeluaran sekolah.
+          </p>
         </div>
         <Skeleton className="h-10 w-40 rounded-md" />
       </div>
@@ -71,7 +75,7 @@ function PengeluaranPageSkeleton() {
         <AlertTitle>Informasi</AlertTitle>
         <AlertDescription>
           Gunakan halaman ini untuk mencatat semua transaksi pengeluaran,
-          seperti pembelian ATK, pembayaran listrik, atau gaji guru.
+          seperti uang makan, pembelian ATK, pembayaran listrik, atau gaji guru.
         </AlertDescription>
       </Alert>
 

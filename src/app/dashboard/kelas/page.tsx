@@ -30,14 +30,14 @@ const fetcher = (url: string) => api.getKelas();
 function KelasPageSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Manajemen Kelas</h2>
           <p className="text-muted-foreground">
             Kelola data kelas dan wali kelas.
           </p>
         </div>
-        <AddKelasDialog />
+        <Skeleton className="h-10 w-40 rounded-md" />
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />

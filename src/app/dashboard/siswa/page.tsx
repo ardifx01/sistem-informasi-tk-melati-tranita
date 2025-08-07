@@ -44,10 +44,12 @@ const ITEMS_PER_PAGE = 20;
 function SiswaPageSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center sm:justify-between">
         <div>
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="mt-2 h-4 w-80" />
+          <h2 className="text-3xl font-bold tracking-tight">Manajemen Siswa</h2>
+          <p className="text-muted-foreground">
+            Kelola data siswa, kelas, dan status pembayaran.
+          </p>
         </div>
         <Skeleton className="h-10 w-32 rounded-md" />
       </div>

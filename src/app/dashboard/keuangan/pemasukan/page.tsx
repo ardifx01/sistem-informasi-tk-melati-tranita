@@ -58,17 +58,25 @@ const pemasukanColumns: ExportColumn<Pemasukan>[] = [
 function PemasukanPageSkeleton() {
   return (
     <div className="space-y-6">
-      <div>
-        <Skeleton className="h-9 w-64" />
-        <Skeleton className="mt-2 h-4 w-80" />
+      <div className="flex items-center sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Riwayat Pemasukan
+          </h2>
+          <p className="text-muted-foreground">
+            Catatan semua transaksi pemasukan yang telah terjadi.
+          </p>
+        </div>
+        <Skeleton className="h-10 w-40 rounded-md" />
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
-        <AlertTitle>Halaman Riwayat</AlertTitle>
+        <AlertTitle>Informasi</AlertTitle>
         <AlertDescription>
           Halaman ini menampilkan semua pemasukan yang sudah tercatat. Untuk
           mencatat pemasukan baru, Anda harus melakukannya dengan{" "}
-          <b>membayar tagihan</b> melalui halaman <b>Manajemen Tagihan</b>.
+          <b>membuat tagihan</b> dan <b>membayar tagihan</b> tersebut melalui
+          halaman <b>Manajemen Tagihan</b>.
         </AlertDescription>
       </Alert>
       <Card>

@@ -35,20 +35,25 @@ const kelasFetcher = (url: string) => api.getKelas();
 function TagihanPageSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center sm:justify-between">
         <div>
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="mt-2 h-4 w-80" />
+          <h2 className="text-3xl font-bold tracking-tight">
+            Manajemen Tagihan
+          </h2>
+          <p className="text-muted-foreground">
+            Buat tagihan baru dan pantau status pembayaran siswa.
+          </p>
         </div>
-        <Skeleton className="h-10 w-36 rounded-md" />
+        <Skeleton className="h-10 w-40 rounded-md" />
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
         <AlertTitle>Alur Kerja Pembayaran</AlertTitle>
         <AlertDescription>
-          Ini adalah pusat manajemen pembayaran. <b>Buat tagihan</b> untuk siswa
-          terlebih dahulu, kemudian <b>bayar tagihan</b> tersebut dari menu aksi
-          di tabel. Pembayaran yang berhasil akan otomatis tercatat di halaman{" "}
+          Ini adalah pusat manajemen pembayaran. <b>Buat tagihan</b> di awal
+          bulan untuk mencatat kewajiban membayar SPP siswa terlebih dahulu,
+          kemudian <b>bayar tagihan</b> tersebut dari menu aksi di tabel.
+          Setelah pembayaran berhasil, data akan otomatis tercatat di halaman{" "}
           <b>Riwayat Pemasukan</b>.
         </AlertDescription>
       </Alert>

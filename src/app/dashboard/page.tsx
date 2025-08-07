@@ -62,7 +62,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard Utama</h1>
         <p className="text-muted-foreground">
-          Ringkasan data siswa dan kondisi keuangan sekolah.
+          Ringkasan umum data siswa, kelas dan keuangan sekolah.
         </p>
       </div>
 
