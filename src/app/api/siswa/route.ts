@@ -8,8 +8,24 @@ import { id as localeID } from "date-fns/locale";
 export async function GET() {
   try {
     const siswa = await prisma.siswa.findMany({
-      include: {
-        kelas: true,
+      // Memilih field secara eksplisit untuk memastikan semua data yang dibutuhkan ada
+      select: {
+        id: true,
+        nis: true,
+        nama: true,
+        jenisKelamin: true,
+        tanggalLahir: true,
+        alamat: true,
+        telepon: true,
+        orangTua: true,
+        jumlahSpp: true,
+        kelasId: true,
+        kelas: {
+          select: {
+            id: true,
+            nama: true,
+          },
+        },
         _count: {
           select: {
             tagihan: {
@@ -39,7 +55,6 @@ export async function GET() {
     );
   }
 }
-
 // POST /api/siswa - Membuat siswa baru DAN tagihan pertamanya
 export async function POST(request: Request) {
   try {
