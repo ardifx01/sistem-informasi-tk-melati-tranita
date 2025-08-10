@@ -16,6 +16,7 @@ import {
   UserX,
   Download,
   Lightbulb,
+  AlertTriangle,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { DashboardStats, Pemasukan, Pengeluaran } from "@/lib/types";
@@ -205,6 +206,17 @@ export default function KeuanganDashboardPage() {
           </AlertDescription>
         </Alert>
       )}
+
+      {/* {stats.overview.saldoSaatIni < 0 && ( */}
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Peringatan: Saldo Minus!</AlertTitle>
+        <AlertDescription>
+          Total pengeluaran telah melebihi total pemasukan. Mohon periksa
+          kembali transaksi Anda.
+        </AlertDescription>
+      </Alert>
+      {/* )} */}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
