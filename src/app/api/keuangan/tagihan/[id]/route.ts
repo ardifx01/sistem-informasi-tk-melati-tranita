@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { updateTagihanSchema } from "@/lib/validation";
 
 // Skema untuk update, semua field opsional
-const updateTagihanSchema = z
-  .object({
-    keterangan: z.string().min(3).optional(),
-    jumlahTagihan: z.coerce.number().positive().optional(),
-    tanggalJatuhTempo: z.coerce.date().optional(),
-    status: z.enum(["BELUM_LUNAS", "LUNAS", "TERLAMBAT"]).optional(),
-  })
-  .partial();
 
 export async function GET(
   request: Request,
@@ -41,8 +34,6 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // --- PERBAIKAN DI SINI ---
-    // 1. Cek dulu apakah tagihan ada
     const existingTagihan = await prisma.tagihan.findUnique({
       where: { id: params.id },
     });
@@ -67,7 +58,6 @@ export async function PUT(
       );
     }
 
-    // 2. Lanjutkan update jika tagihan ada
     const updatedTagihan = await prisma.tagihan.update({
       where: { id: params.id },
       data: validation.data,
