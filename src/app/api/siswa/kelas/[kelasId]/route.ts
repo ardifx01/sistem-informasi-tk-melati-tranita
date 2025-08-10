@@ -13,7 +13,8 @@ export async function GET(
         kelasId: params.kelasId,
       },
       select: {
-        id: true, // Hanya pilih ID karena itu yang dibutuhkan untuk membuat tagihan
+        id: true,
+        jumlahSpp: true,
       },
     });
 
