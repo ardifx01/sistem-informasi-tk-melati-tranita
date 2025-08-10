@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { AddSiswaDialog } from "@/components/Siswa/AddSiswaDialog";
-import { SiswaTable } from "@/components/Siswa/SiswaTable";
+import { AddSiswaDialog } from "@/components/Dashboard/Siswa/AddSiswaDialog";
+import { SiswaTable } from "@/components/Dashboard/Siswa/SiswaTable";
 import {
   Card,
   CardContent,
@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 interface SiswaWithTunggakan extends SiswaType {
   jumlahTunggakan: number;
@@ -51,7 +52,12 @@ function SiswaPageSkeleton() {
             Kelola data siswa, kelas, dan status pembayaran.
           </p>
         </div>
-        <Skeleton className="h-10 w-32 rounded-md" />
+        <div className="flex items-center gap-4">
+          <RefreshButton
+            mutateKeys={["api/siswa", "api/keuangan/tagihan", "api/kelas"]}
+          />
+          <Skeleton className="h-10 w-40 rounded-md" />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
@@ -76,11 +82,12 @@ function SiswaPageSkeleton() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>No</TableHead>
                   <TableHead>NIS</TableHead>
                   <TableHead>Nama</TableHead>
                   <TableHead>Kelas</TableHead>
                   <TableHead>Status Pembayaran</TableHead>
-                  <TableHead>Jenis Kelamin</TableHead>
+                  <TableHead>Jumlah Spp</TableHead>
                   <TableHead className="w-[100px]">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -194,7 +201,10 @@ export default function SiswaPage() {
             Kelola data siswa, kelas, dan status pembayaran.
           </p>
         </div>
-        <AddSiswaDialog />
+        <div className="flex gap-4">
+          <RefreshButton mutateKeys="api/siswa" />
+          <AddSiswaDialog />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
