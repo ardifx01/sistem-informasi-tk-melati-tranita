@@ -12,7 +12,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { User, Cake, MapPin, Phone, School, Edit, Plus } from "lucide-react";
+import {
+  User,
+  Cake,
+  MapPin,
+  Phone,
+  School,
+  Edit,
+  Plus,
+  Banknote,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -25,21 +34,55 @@ import useSWR, { mutate } from "swr";
 function SiswaDetailSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Skeleton className="h-24 w-24 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-5 w-32" />
+      {/* Skeleton for Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-24 w-24 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-32 rounded-md" />
+          {/* <Skeleton className="h-10 w-36 rounded-md" /> */}
         </div>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
+
+      {/* Skeleton for Info Cards */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Informasi Siswa</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full " />
+            <Skeleton className="h-12 w-full " />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Ringkasan Keuangan</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Skeleton for History Table */}
       <Card>
         <CardHeader>
-          <Skeleton className="h-7 w-40" />
+          <CardTitle>Riwayat Tagihan</CardTitle>
+          <CardDescription>
+            <Skeleton className="h-4 w-72" />
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-64 w-full" />
@@ -133,9 +176,9 @@ export default function SiswaDetailPage() {
           <Button variant="outline" onClick={() => setIsEditOpen(true)}>
             <Edit className="mr-2 h-4 w-4" /> Edit Siswa
           </Button>
-          <Button onClick={() => setIsAddTagihanOpen(true)}>
+          {/* <Button onClick={() => setIsAddTagihanOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Buat Tagihan Baru
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -178,11 +221,18 @@ export default function SiswaDetailPage() {
                 <p className="font-semibold">{siswa.telepon}</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 col-span-2">
+            <div className="flex items-start gap-2">
               <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
               <div>
                 <p className="text-muted-foreground">Alamat</p>
                 <p className="font-semibold">{siswa.alamat}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Banknote className="h-4 w-4 mt-1 text-muted-foreground" />
+              <div>
+                <p className="text-muted-foreground">Jumlah Spp</p>
+                <p className="font-semibold">Rp {siswa.jumlahSpp}</p>
               </div>
             </div>
           </CardContent>

@@ -54,9 +54,12 @@ function KategoriPageSkeleton() {
 
       <Card>
         <CardHeader>
-          <Skeleton className="h-7 w-40" />
-          <div className="pt-4">
-            <Skeleton className="h-10 w-48 rounded-md" />
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-5 w-40" />
+          <div className="flex pt-4 gap-2">
+            <Skeleton className="h-7 w-24 rounded-md" />
+            <Skeleton className="h-7 w-24 rounded-md" />
+            <Skeleton className="h-7 w-24 rounded-md" />
           </div>
         </CardHeader>
         <CardContent>
