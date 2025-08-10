@@ -31,6 +31,7 @@ model Siswa {
   alamat       String
   telepon      String
   orangTua     String
+  jumlahSpp    Int 
   kelasId      String
   kelas        Kelas     @relation(fields: [kelasId], references: [id])
   tagihan      Tagihan[] 
@@ -65,7 +66,7 @@ model Pemasukan {
   tanggal    DateTime
   jumlah     Int
   keterangan String
-  kategori   KategoriPemasukan
+  kategori   String
   tagihanId  String           @unique // <-- PERUBAHAN: Setiap pemasukan melunasi satu tagihan
   tagihan    Tagihan          @relation(fields: [tagihanId], references: [id])
   createdAt  DateTime         @default(now())
@@ -77,32 +78,22 @@ model Pengeluaran {
   tanggal    DateTime
   jumlah     Int
   keterangan String
-  kategori   KategoriPengeluaran
+  kategori   String
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
 }
 
-// --- ENUMS ---
 
-enum KategoriPemasukan {
-  UANG_SEKOLAH
-  UANG_PENDAFTARAN
-  LAINNYA
+model Kategori {
+  id    String        @id @default(cuid())
+  nama  String        @unique
+  tipe String
 }
 
-enum KategoriPengeluaran {
-  ATK
-  OPERASIONAL
-  GAJI_GURU
-  KEGIATAN_SISWA
-  PERAWATAN_ASET
-  LAINNYA
-}
-
+  
 enum StatusPembayaran {
   BELUM_LUNAS
   LUNAS
-  TERLAMBAT
 }
 
 enum Role {

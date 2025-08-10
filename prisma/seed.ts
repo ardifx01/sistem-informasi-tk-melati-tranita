@@ -1,16 +1,39 @@
-import { prisma } from "@/lib/db";
-import { hashPassword } from "../src/lib/auth";
+import { PrismaClient } from "@/generated/prisma/client";
+import { hashPassword } from "@/lib/auth";
+
+const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // await prisma.pemasukan.deleteMany();
-  // await prisma.tagihan.deleteMany();
-  // await prisma.pengeluaran.deleteMany();
-  // await prisma.siswa.deleteMany();
-  // await prisma.kelas.deleteMany();
-  // await prisma.user.deleteMany();
-  // console.log("Data lama berhasil dihapus.");
+  await prisma.pemasukan.deleteMany();
+  await prisma.tagihan.deleteMany();
+  await prisma.pengeluaran.deleteMany();
+  await prisma.siswa.deleteMany();
+  await prisma.kelas.deleteMany();
+  await prisma.kategori.deleteMany();
+  await prisma.user.deleteMany();
+  console.log("🗑️ Data lama berhasil dihapus.");
+
+  const kategoriSpp = await prisma.kategori.create({
+    data: { nama: "Uang Sekolah (SPP)", tipe: "PEMASUKAN" },
+  });
+  const kategoriPendaftaran = await prisma.kategori.create({
+    data: { nama: "Uang Pendaftaran", tipe: "PEMASUKAN" },
+  });
+  const kategoriAtk = await prisma.kategori.create({
+    data: { nama: "Alat Tulis Kantor", tipe: "PENGELUARAN" },
+  });
+  const kategoriOperasional = await prisma.kategori.create({
+    data: { nama: "Operasional", tipe: "PENGELUARAN" },
+  });
+  console.log(
+    "🗂️ Kategori default berhasil dibuat.",
+    kategoriSpp,
+    kategoriPendaftaran,
+    kategoriAtk,
+    kategoriOperasional
+  );
 
   // Create admin user
   const adminUser = await prisma.user.upsert({
@@ -44,7 +67,7 @@ async function main() {
     update: {},
     create: {
       nama: "A",
-      waliKelas: "Pak Agus Setiawan",
+      waliKelas: "Pak Agus Setiawan , S.Pd",
     },
   });
 
@@ -53,7 +76,7 @@ async function main() {
     update: {},
     create: {
       nama: "B1",
-      waliKelas: "Bu Sari Indah",
+      waliKelas: "Bu Sari Indah, S.Pd",
     },
   });
 
@@ -62,7 +85,7 @@ async function main() {
     update: {},
     create: {
       nama: "B2",
-      waliKelas: "Pak Budi Santoso",
+      waliKelas: "Pak Budi Santoso, S.Pd",
     },
   });
 
@@ -71,7 +94,7 @@ async function main() {
     update: {},
     create: {
       nama: "B3",
-      waliKelas: "Bu Rina Wati",
+      waliKelas: "Bu Rina Wati, S.Pd",
     },
   });
 
@@ -80,7 +103,7 @@ async function main() {
     update: {},
     create: {
       nama: "B4",
-      waliKelas: "Pak Dedi Kurniawan",
+      waliKelas: "Pak Dedi Kurniawan, S.Pd",
     },
   });
 
@@ -104,6 +127,7 @@ async function main() {
       alamat: "Jl. Merdeka No. 10, Jakarta",
       telepon: "081234567890",
       orangTua: "Asep",
+      jumlahSpp: 175000, // Jumlah SPP per bulan
       kelasId: kelasA.id,
     },
   });
@@ -119,6 +143,7 @@ async function main() {
       alamat: "Jl. Sudirman No. 25, Jakarta",
       telepon: "081234567891",
       orangTua: "Ananda",
+      jumlahSpp: 100000, // Jumlah SPP per bulan
       kelasId: kelasA.id,
     },
   });
@@ -134,6 +159,23 @@ async function main() {
       alamat: "Jl. Pahlawan No. 5, Jakarta",
       telepon: "081234567892",
       orangTua: "Agus",
+      jumlahSpp: 175000, // Jumlah SPP per bulan
+      kelasId: kelasB1.id,
+    },
+  });
+
+  const siswa7 = await prisma.siswa.upsert({
+    where: { nis: "2023007" },
+    update: {},
+    create: {
+      nis: "2023007",
+      nama: "Budi Agus",
+      jenisKelamin: "L",
+      tanggalLahir: new Date("2006-01-10"),
+      alamat: "Jl. Pahlawan No. 5, Jakarta",
+      telepon: "081234567892",
+      orangTua: "Agus",
+      jumlahSpp: 100000, // Jumlah SPP per bulan
       kelasId: kelasB1.id,
     },
   });
@@ -149,6 +191,23 @@ async function main() {
       alamat: "Jl. Gatot Subroto No. 15, Jakarta",
       telepon: "081234567893",
       orangTua: "Supardi",
+      jumlahSpp: 350000, // Jumlah SPP per bulan
+      kelasId: kelasB2.id,
+    },
+  });
+
+  const siswa8 = await prisma.siswa.upsert({
+    where: { nis: "2023004" },
+    update: {},
+    create: {
+      nis: "2023004",
+      nama: "Dewi Sari",
+      jenisKelamin: "P",
+      tanggalLahir: new Date("2007-05-18"),
+      alamat: "Jl. Gatot Subroto No. 15, Jakarta",
+      telepon: "081234567893",
+      orangTua: "Supardi",
+      jumlahSpp: 150000, // Jumlah SPP per bulan
       kelasId: kelasB2.id,
     },
   });
@@ -164,6 +223,7 @@ async function main() {
       alamat: "Jl. Thamrin No. 8, Jakarta",
       telepon: "081234567894",
       orangTua: "Sumanto",
+      jumlahSpp: 350000, // Jumlah SPP per bulan
       kelasId: kelasB3.id,
     },
   });
@@ -179,11 +239,21 @@ async function main() {
       alamat: "Jl. Manas No. 8, Jawa",
       telepon: "081234567894",
       orangTua: "Sucipto",
+      jumlahSpp: 350000, // Jumlah SPP per bulan
       kelasId: kelasB3.id,
     },
   });
 
-  console.log("👨‍🎓 Siswa created:", { siswa1, siswa2, siswa3, siswa4, siswa5 });
+  console.log("👨‍🎓 Siswa created:", {
+    siswa1,
+    siswa2,
+    siswa3,
+    siswa4,
+    siswa5,
+    siswa6,
+    siswa7,
+    siswa8,
+  });
 
   //tagihan 1
   const tagihanSiswa1 = await prisma.tagihan.create({
@@ -202,7 +272,7 @@ async function main() {
       tanggal: new Date("2025-07-05"),
       jumlah: 125000,
       keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG_SEKOLAH",
+      kategori: "UANG SEKOLAH",
       tagihanId: tagihanSiswa1.id,
     },
   });
@@ -224,7 +294,7 @@ async function main() {
       tanggal: new Date("2025-07-05"),
       jumlah: 125000,
       keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG_SEKOLAH",
+      kategori: "UANG SEKOLAH",
       tagihanId: tagihanSiswa2.id,
     },
   });
@@ -246,7 +316,7 @@ async function main() {
       tanggal: new Date("2025-07-05"),
       jumlah: 125000,
       keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG_SEKOLAH",
+      kategori: "UANG SEKOLAH",
       tagihanId: tagihanSiswa3.id,
     },
   });
@@ -258,7 +328,7 @@ async function main() {
       keterangan: "SPP Bulan Juli 2025",
       jumlahTagihan: 125000,
       tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "TERLAMBAT",
+      status: "LUNAS",
     },
   });
 
@@ -268,7 +338,7 @@ async function main() {
       tanggal: new Date("2025-07-05"),
       jumlah: 125000,
       keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG_SEKOLAH",
+      kategori: "UANG SEKOLAH",
       tagihanId: tagihanSiswa4.id,
     },
   });
@@ -290,7 +360,7 @@ async function main() {
       tanggal: new Date("2025-07-05"),
       jumlah: 125000,
       keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG_SEKOLAH",
+      kategori: "UANG SEKOLAH",
       tagihanId: tagihanSiswa5.id,
     },
   });
@@ -312,7 +382,7 @@ async function main() {
       tanggal: new Date("2025-07-05"),
       jumlah: 125000,
       keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG_SEKOLAH",
+      kategori: "UANG SEKOLAH",
       tagihanId: tagihanSiswa6.id,
     },
   });
@@ -339,150 +409,15 @@ async function main() {
   });
   console.log("Data pengeluaran berhasil dibuat.");
 
-  // Create pelanggaran dengan distribusi tanggal sepanjang tahun untuk tren yang realistis
-  // const currentYear = new Date().getFullYear();
-
-  // const pelanggaran1 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa1.id,
-  //     tanggal: new Date(`${currentYear}-01-15`),
-  //     jenisPelanggaran: "Terlambat",
-  //     tingkatPelanggaran: "RINGAN",
-  //     deskripsi:
-  //       "Terlambat masuk kelas selama 15 menit tanpa keterangan yang jelas",
-  //     tindakan: "Teguran lisan dan pencatatan di buku pelanggaran",
-  //     status: "SELESAI",
-  //   },
-  // });
-
-  // const pelanggaran2 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa2.id,
-  //     tanggal: new Date(`${currentYear}-02-16`),
-  //     jenisPelanggaran: "Tidak mengerjakan tugas",
-  //     tingkatPelanggaran: "SEDANG",
-  //     deskripsi: "Tidak mengerjakan PR Matematika selama 3 hari berturut-turut",
-  //     tindakan: "Panggilan orang tua dan bimbingan khusus",
-  //     status: "PROSES",
-  //   },
-  // });
-
-  // const pelanggaran3 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa3.id,
-  //     tanggal: new Date(`${currentYear}-03-17`),
-  //     jenisPelanggaran: "Berkelahi",
-  //     tingkatPelanggaran: "BERAT",
-  //     deskripsi: "Berkelahi dengan teman sekelas di kantin sekolah",
-  //     tindakan: "Skorsing 3 hari dan mediasi dengan pihak yang bertikai",
-  //     status: "PENDING",
-  //   },
-  // });
-
-  // const pelanggaran4 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa4.id,
-  //     tanggal: new Date(`${currentYear}-04-20`),
-  //     jenisPelanggaran: "Tidak berseragam",
-  //     tingkatPelanggaran: "RINGAN",
-  //     deskripsi: "Tidak memakai seragam lengkap (tidak memakai dasi)",
-  //     tindakan: "Teguran dan diminta melengkapi seragam",
-  //     status: "SELESAI",
-  //   },
-  // });
-
-  // const pelanggaran5 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa5.id,
-  //     tanggal: new Date(`${currentYear}-05-22`),
-  //     jenisPelanggaran: "Membolos",
-  //     tingkatPelanggaran: "SEDANG",
-  //     deskripsi: "Membolos pelajaran bahasa inggris tanpa ijin",
-  //     tindakan: "Panggilan orang tua dan konseling",
-  //     status: "PROSES",
-  //   },
-  // });
-
-  // // Tambah beberapa pelanggaran lagi untuk tren yang lebih terlihat
-  // const pelanggaran6 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa1.id,
-  //     tanggal: new Date(`${currentYear}-06-10`),
-  //     jenisPelanggaran: "Terlambat",
-  //     tingkatPelanggaran: "RINGAN",
-  //     deskripsi: "Terlambat masuk kelas kedua kalinya",
-  //     tindakan: "Teguran tertulis dan peringatan",
-  //     status: "SELESAI",
-  //   },
-  // });
-
-  // const pelanggaran7 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa3.id,
-  //     tanggal: new Date(`${currentYear}-07-08`),
-  //     jenisPelanggaran: "Tidak berseragam",
-  //     tingkatPelanggaran: "RINGAN",
-  //     deskripsi: "Tidak memakai sepatu sekolah yang sesuai",
-  //     tindakan: "Teguran dan diminta ganti sepatu",
-  //     status: "SELESAI",
-  //   },
-  // });
-
-  // const pelanggaran8 = await prisma.pelanggaran.create({
-  //   data: {
-  //     siswaId: siswa2.id,
-  //     tanggal: new Date(`${currentYear}-07-19`),
-  //     jenisPelanggaran: "Membolos",
-  //     tingkatPelanggaran: "SEDANG",
-  //     deskripsi: "Membolos pelajaran praktikum tanpa keterangan",
-  //     tindakan: "Panggilan orang tua dan konseling",
-  //     status: "PROSES",
-  //   },
-  // });
-
-  // console.log("⚠️ Pelanggaran created:", {
-  //   pelanggaran1,
-  //   pelanggaran2,
-  //   pelanggaran3,
-  //   pelanggaran4,
-  //   pelanggaran5,
-  //   pelanggaran6,
-  //   pelanggaran7,
-  //   pelanggaran8,
-  // });
-
   console.log("✅ Database seeded successfully!");
-  //   console.log(`
-  // 📋 Summary SMKN 9 KOLAKA:
-  // - Users: 2 (1 Admin, 1 Guru)
-  // - Kelas: 5 (5 Kelas)
-  // - Siswa: 5
-  // - pemasukan: (pembayaran spp)
-  // - pengeluaran: (pembelian spidol dll)
-
-  // 🏫 Struktur Kelas :
-  // - Jurusan: TKJ, GP, MPLB, TAB, TEI
-  // - Paralel: 1, 2, 3 (sesuai kebutuhan)
-
-  // � Jurusan SMK:
-  // - TKJ (Teknik Komputer dan Jaringan)
-  // - GP (Geologi Pertambangan)
-  // - MPLB (Manajemen Perkantoran dan Layanan Bisnis)
-  // - TAB (Teknik Gambar Bangunan)
-  // - TEI (Teknik Elektronika Industri)
-
-  // �🔑 Login credentials:
-  // - Admin: admin@sekolah.com / password123
-  // - Guru: guru@sekolah.com / password123
-  //   `);
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
   .catch(async (e) => {
-    console.error(e);
+    console.error("❌ Gagal melakukan seeding database:", e);
     await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
