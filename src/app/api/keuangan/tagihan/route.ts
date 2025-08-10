@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { getMonth, getYear } from "date-fns";
 
-// Skema validasi untuk satu tagihan
 const createTagihanSchema = z.object({
   siswaId: z.string().cuid(),
   keterangan: z.string().min(3),
   jumlahTagihan: z.number().positive(),
-  tanggalJatuhTempo: z.coerce.date(), // coerce akan mengubah string tanggal menjadi objek Date
+  tanggalJatuhTempo: z.coerce.date(),
 });
 
 export async function GET() {
@@ -43,8 +43,6 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-    // Memungkinkan pembuatan satu atau banyak tagihan sekaligus
     const validation = z
       .union([createTagihanSchema, z.array(createTagihanSchema)])
       .safeParse(body);
@@ -59,20 +57,77 @@ export async function POST(request: Request) {
       );
     }
 
-    if (Array.isArray(validation.data)) {
-      // Buat banyak tagihan (misalnya, generate SPP untuk satu kelas)
-      const result = await prisma.tagihan.createMany({
-        data: validation.data,
-      });
-      return NextResponse.json(result, { status: 201 });
-    } else {
-      // Buat satu tagihan
-      const tagihanBaru = await prisma.tagihan.create({
-        data: validation.data,
-      });
-      return NextResponse.json(tagihanBaru, { status: 201 });
+    const dataToCreate = Array.isArray(validation.data)
+      ? validation.data
+      : [validation.data];
+
+    // 1. Ambil semua ID siswa dari data yang akan dibuat
+    const siswaIds = dataToCreate.map((d) => d.siswaId);
+
+    // 2. Tentukan periode (bulan dan tahun) dari data pertama
+    const targetDate = dataToCreate[0].tanggalJatuhTempo;
+    const targetMonth = getMonth(targetDate);
+    const targetYear = getYear(targetDate);
+
+    // 3. Cari tagihan yang sudah ada untuk siswa-siswa tersebut di periode yang sama
+    const existingTagihan = await prisma.tagihan.findMany({
+      where: {
+        siswaId: { in: siswaIds },
+        AND: [
+          {
+            // Ekstrak bulan dan tahun dari tanggalJatuhTempo di database
+            // Ini adalah sintaks spesifik Prisma untuk SQLite/PostgreSQL
+            // Jika menggunakan PostgreSQL, ini akan lebih efisien
+            OR: [
+              {
+                tanggalJatuhTempo: {
+                  gte: new Date(targetYear, targetMonth, 1),
+                },
+              },
+              {
+                tanggalJatuhTempo: {
+                  lt: new Date(targetYear, targetMonth + 1, 1),
+                },
+              },
+            ],
+          },
+        ],
+      },
+      select: { siswaId: true },
+    });
+
+    const existingSiswaIds = new Set(existingTagihan.map((t) => t.siswaId));
+
+    // 4. Filter data, hanya buat tagihan untuk siswa yang belum punya
+    const newTagihanData = dataToCreate.filter(
+      (d) => !existingSiswaIds.has(d.siswaId)
+    );
+
+    if (newTagihanData.length === 0) {
+      return NextResponse.json(
+        {
+          message:
+            "Tidak ada tagihan baru yang dibuat karena semua siswa sudah memiliki tagihan di periode ini.",
+          skipped: existingSiswaIds.size,
+        },
+        { status: 200 }
+      );
     }
+
+    // 5. Buat tagihan yang baru
+    const result = await prisma.tagihan.createMany({
+      data: newTagihanData,
+    });
+
+    return NextResponse.json(
+      {
+        message: `Berhasil membuat ${result.count} tagihan baru.`,
+        skipped: existingSiswaIds.size,
+      },
+      { status: 201 }
+    );
   } catch (error) {
+    console.error("Error creating tagihan:", error);
     return NextResponse.json(
       { error: "Gagal membuat data tagihan." },
       { status: 500 }
