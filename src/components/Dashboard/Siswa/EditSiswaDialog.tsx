@@ -43,6 +43,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import type { Siswa, Kelas } from "@/lib/types";
 import { updateSiswaSchema } from "@/lib/validation";
+import { useSWRConfig } from "swr";
+
+const sppOptions = [
+  { value: 175000, label: "Rp 175.000" },
+  { value: 150000, label: "Rp 150.000" },
+  { value: 100000, label: "Rp 100.000" },
+  { value: 350000, label: "Rp 350.000" },
+];
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type SiswaFormValues = z.infer<typeof updateSiswaSchema>;
@@ -60,6 +68,7 @@ export function EditSiswaDialog({
   onOpenChange,
   onSiswaUpdated,
 }: EditSiswaDialogProps) {
+  const { cache, mutate } = useSWRConfig();
   const [kelas, setKelas] = useState<Kelas[]>([]);
 
   const form = useForm<SiswaFormValues>({
@@ -73,6 +82,7 @@ export function EditSiswaDialog({
       orangTua: "",
       kelasId: "",
       tanggalLahir: undefined,
+      jumlahSpp: undefined,
     },
   });
 
@@ -106,15 +116,53 @@ export function EditSiswaDialog({
   const onSubmit = async (values: SiswaFormValues) => {
     if (!siswa) return;
 
+    const siswaListKey = "/api/siswa";
+    const siswaDetailKey = `/api/siswa/${siswa.id}`;
+    const statsKey = "/api/dashboard/stats";
+
+    // 1. Ambil data saat ini dari cache untuk rollback
+    const previousSiswaList = cache.get(siswaListKey)?.data as
+      | Siswa[]
+      | undefined;
+
+    // 2. Buat data optimis
+    const optimisticData =
+      previousSiswaList?.map((item) =>
+        item.id === siswa.id
+          ? {
+              ...item,
+              ...values,
+              tanggalLahir: values.tanggalLahir || item.tanggalLahir,
+            }
+          : item
+      ) || [];
+
+    // 3. Perbarui UI secara instan
+    mutate(siswaListKey, optimisticData, false);
+    toast.loading("Menyimpan perubahan...");
+    onOpenChange(false);
+
     try {
+      // 4. Kirim permintaan ke API
       await api.updateSiswa(siswa.id, values);
+
+      // 5. Jika berhasil, ganti notifikasi dan picu validasi ulang
+      toast.dismiss();
       toast.success("Data siswa berhasil diperbarui!");
-      onOpenChange(false);
+      mutate(siswaListKey);
+      mutate(siswaDetailKey);
+      mutate(statsKey);
+
       onSiswaUpdated?.();
     } catch (error: any) {
+      // 6. Jika gagal, kembalikan UI ke kondisi semula (rollback)
+      toast.dismiss();
       const errorMessage =
         error.response?.data?.error || "Gagal memperbarui data siswa.";
       toast.error(errorMessage);
+      if (previousSiswaList) {
+        mutate(siswaListKey, previousSiswaList, false);
+      }
     }
   };
 
@@ -131,20 +179,20 @@ export function EditSiswaDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="nama"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Lengkap</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nama lengkap siswa" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="nama"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Lengkap</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nama lengkap siswa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />{" "}
               <FormField
                 control={form.control}
                 name="nis"
@@ -158,6 +206,8 @@ export function EditSiswaDialog({
                   </FormItem>
                 )}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="kelasId"
@@ -174,6 +224,36 @@ export function EditSiswaDialog({
                         {kelas.map((k) => (
                           <SelectItem key={k.id} value={k.id}>
                             {k.nama}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="jumlahSpp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tingkat SPP</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih tingkatan SPP" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {sppOptions.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -326,7 +406,7 @@ export function EditSiswaDialog({
                   <FormControl>
                     <Textarea
                       placeholder="Alamat lengkap siswa"
-                      className="resize-none"
+                      className="resize-none min-h-[50px]"
                       {...field}
                     />
                   </FormControl>
@@ -334,6 +414,7 @@ export function EditSiswaDialog({
                 </FormItem>
               )}
             />
+
             <DialogFooter>
               <Button
                 type="button"

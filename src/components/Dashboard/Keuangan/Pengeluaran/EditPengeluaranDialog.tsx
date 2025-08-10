@@ -41,23 +41,14 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import type { Pengeluaran, KategoriPengeluaran } from "@/lib/types";
+import type { Pengeluaran } from "@/lib/types";
 import { updatePengeluaranSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
-import { mutate } from "swr";
+import useSWR, { useSWRConfig } from "swr";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof updatePengeluaranSchema>;
-
-const kategoriOptions: { value: KategoriPengeluaran; label: string }[] = [
-  { value: "OPERASIONAL", label: "Operasional" },
-  { value: "PERAWATAN_ASET", label: "Perawatan Aset" },
-  { value: "KEGIATAN_SISWA", label: "Kegiatan Siswa" },
-  { value: "ATK", label: "Alat Tulis Kantor" },
-  { value: "GAJI_GURU", label: "Gaji Guru" },
-  { value: "LAINNYA", label: "Lainnya" },
-];
 
 interface EditPengeluaranDialogProps {
   pengeluaran: Pengeluaran | null;
@@ -66,17 +57,31 @@ interface EditPengeluaranDialogProps {
   onPengeluaranUpdated?: () => void;
 }
 
+const kategoriFetcher = (url: string) => api.getKategori("PENGELUARAN");
+
 export function EditPengeluaranDialog({
   pengeluaran,
   open,
   onOpenChange,
   onPengeluaranUpdated,
 }: EditPengeluaranDialogProps) {
+  const { cache, mutate } = useSWRConfig(); // Hook SWR untuk interaksi cache
+  const { data: kategoriPengeluaran, error: kategoriError } = useSWR(
+    open ? "/api/kategori?tipe=PENGELUARAN" : null,
+    kategoriFetcher
+  );
+
   const form = useForm<PengeluaranFormValues>({
     resolver: zodResolver(updatePengeluaranSchema),
   });
 
   const { isSubmitting } = form.formState;
+
+  useEffect(() => {
+    if (kategoriError) {
+      toast.error("Gagal memuat kategori pengeluaran.");
+    }
+  }, [kategoriError]);
 
   useEffect(() => {
     if (pengeluaran) {
@@ -90,18 +95,47 @@ export function EditPengeluaranDialog({
   const onSubmit = async (values: PengeluaranFormValues) => {
     if (!pengeluaran) return;
 
-    try {
-      await api.updatePengeluaran(pengeluaran.id, values);
-      toast.success("Data pengeluaran berhasil diperbarui!");
-      mutate("api/dashboard/stats");
-      mutate("dashboard/keuangan/pengeluaran");
+    const pengeluaranKey = "/api/keuangan/pengeluaran";
+    const statsKey = "/api/dashboard/stats";
 
-      onOpenChange(false);
+    // 1. Ambil data saat ini dari cache untuk rollback jika gagal
+    const previousData = cache.get(pengeluaranKey)?.data as
+      | Pengeluaran[]
+      | undefined;
+
+    // 2. Buat data optimis (data baru yang akan ditampilkan di UI)
+    const optimisticData =
+      previousData?.map((item) =>
+        item.id === pengeluaran.id
+          ? { ...item, ...values, tanggal: values.tanggal || item.tanggal }
+          : item
+      ) || [];
+
+    // 3. Perbarui UI secara instan tanpa memvalidasi ulang
+    mutate(pengeluaranKey, optimisticData, false);
+    toast.loading("Menyimpan perubahan...");
+    onOpenChange(false);
+
+    try {
+      // 4. Kirim permintaan ke API
+      await api.updatePengeluaran(pengeluaran.id, values);
+
+      // 5. Jika berhasil, ganti notifikasi dan picu validasi ulang untuk semua data terkait
+      toast.dismiss();
+      toast.success("Data pengeluaran berhasil diperbarui!");
+      mutate(pengeluaranKey);
+      mutate(statsKey);
+
       onPengeluaranUpdated?.();
     } catch (error: any) {
+      // 6. Jika gagal, kembalikan UI ke kondisi semula (rollback) dan tampilkan error
+      toast.dismiss();
       const errorMessage =
         error.response?.data?.error || "Gagal memperbarui data.";
       toast.error(errorMessage);
+      if (previousData) {
+        mutate(pengeluaranKey, previousData, false);
+      }
     }
   };
 
@@ -189,12 +223,12 @@ export function EditPengeluaranDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {kategoriOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                      {(kategoriPengeluaran || []).map((kategori) => (
+                        <SelectItem key={kategori.id} value={kategori.nama}>
+                          {kategori.nama}
                         </SelectItem>
                       ))}
-                    </SelectContent>
+                    </SelectContent>{" "}
                   </Select>
                   <FormMessage />
                 </FormItem>

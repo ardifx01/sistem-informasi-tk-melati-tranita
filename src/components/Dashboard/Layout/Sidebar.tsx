@@ -1,19 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
   GraduationCap,
-  BookText, // Ikon baru untuk panduan
+  BookText,
   Wallet,
   Banknote,
   HandCoins,
   CreditCard,
+  Settings,
+  Tags,
   LucideIcon,
-  ChartNoAxesCombined,
   BarChartHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../ui/accordion";
+} from "../../ui/accordion";
 
 // Definisi tipe data (tidak berubah)
 interface LabelItem {
@@ -97,11 +98,39 @@ const navigationItems: NavigationItem[] = [
       },
     ],
   },
+  { type: "label", name: "Pengaturan" },
+  {
+    type: "collapsible",
+    name: "Pengaturan",
+    icon: Settings,
+    subItems: [
+      {
+        name: "Kategori",
+        href: "/dashboard/pengaturan/kategori",
+        icon: Tags,
+      },
+    ],
+  },
 ];
 
 // Komponen Sidebar
 export function SidebarContent() {
   const pathname = usePathname();
+  // State untuk mengontrol item accordion yang sedang terbuka
+  const [openAccordion, setOpenAccordion] = useState("");
+
+  // Efek untuk menentukan item mana yang harus terbuka secara default berdasarkan URL
+  useEffect(() => {
+    for (const item of navigationItems) {
+      if (
+        item.type === "collapsible" &&
+        item.subItems.some((sub) => pathname.startsWith(sub.href))
+      ) {
+        setOpenAccordion(item.name);
+        return;
+      }
+    }
+  }, [pathname]);
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -115,7 +144,8 @@ export function SidebarContent() {
         </Link>
       </div>
 
-      {/* Konten Navigasi */}
+      {/* Konten Navigasi (Scrollable) */}
+      {/* Kelas overflow-y-auto akan membuat area ini bisa di-scroll jika kontennya melebihi tinggi layar */}
       <div className="flex flex-1 flex-col gap-y-5 overflow-y-auto px-4 py-4">
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -134,21 +164,26 @@ export function SidebarContent() {
                   }
 
                   if (item.type === "collapsible") {
+                    const Icon = item.icon;
                     const isParentActive = item.subItems.some((sub) =>
                       pathname.startsWith(sub.href)
                     );
-                    const Icon = item.icon;
                     return (
                       <li key={item.name}>
+                        {/* Semua Accordion dikontrol oleh state 'openAccordion' */}
                         <Accordion
                           type="single"
                           collapsible
-                          defaultValue={isParentActive ? "item-1" : ""}
+                          value={openAccordion}
+                          onValueChange={setOpenAccordion}
                         >
-                          <AccordionItem value="item-1" className="border-b-0">
+                          <AccordionItem
+                            value={item.name}
+                            className="border-b-0"
+                          >
                             <AccordionTrigger
                               className={cn(
-                                "flex items-center gap-x-3 rounded-md  p-2 text-sm font-semibold leading-6 text-foreground hover:bg-muted hover:no-underline",
+                                "flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-foreground hover:bg-muted hover:no-underline",
                                 isParentActive && "bg-primary/10 text-primary"
                               )}
                             >

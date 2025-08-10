@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,43 +42,46 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import type { KategoriPengeluaran } from "@/lib/types";
 import { createPengeluaranSchema } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
-import { mutate } from "swr";
+import useSWR, { mutate } from "swr";
 
 // Tipe untuk nilai form
 type PengeluaranFormValues = z.infer<typeof createPengeluaranSchema>;
 
-// Opsi untuk kategori pengeluaran
-const kategoriOptions: { value: KategoriPengeluaran; label: string }[] = [
-  { value: "OPERASIONAL", label: "Operasional" },
-  { value: "PERAWATAN_ASET", label: "Perawatan Aset" },
-  { value: "KEGIATAN_SISWA", label: "Kegiatan Siswa" },
-  { value: "ATK", label: "Alat Tulis Kantor" },
-  { value: "GAJI_GURU", label: "Gaji Guru" },
-  { value: "LAINNYA", label: "Lainnya" },
-];
-
 interface AddPengeluaranDialogProps {
   onPengeluaranAdded?: () => void;
 }
+
+const kategoriFetcher = (url: string) => api.getKategori("PENGELUARAN");
 
 export function AddPengeluaranDialog({
   onPengeluaranAdded,
 }: AddPengeluaranDialogProps) {
   const [open, setOpen] = useState(false);
 
+  const { data: kategoriPengeluaran, error: kategoriError } = useSWR(
+    open ? "/api/kategori?tipe=PENGELUARAN" : null,
+    kategoriFetcher
+  );
+
   const form = useForm<PengeluaranFormValues>({
     resolver: zodResolver(createPengeluaranSchema),
     defaultValues: {
       jumlah: 0,
       keterangan: "",
+      tanggal: new Date(),
     },
   });
 
   const { isSubmitting } = form.formState;
+
+  useEffect(() => {
+    if (kategoriError) {
+      toast.error("Gagal memuat kategori pengeluaran.");
+    }
+  }, [kategoriError]);
 
   const onSubmit = async (values: PengeluaranFormValues) => {
     try {
@@ -187,16 +190,16 @@ export function AddPengeluaranDialog({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih kategori pengeluaran" />
+                        <SelectValue placeholder="Pilih kategori" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {kategoriOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                      {(kategoriPengeluaran || []).map((kategori) => (
+                        <SelectItem key={kategori.id} value={kategori.nama}>
+                          {kategori.nama}
                         </SelectItem>
                       ))}
-                    </SelectContent>
+                    </SelectContent>{" "}
                   </Select>
                   <FormMessage />
                 </FormItem>

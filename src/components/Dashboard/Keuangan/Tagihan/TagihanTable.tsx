@@ -28,7 +28,9 @@ import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { BayarTagihanDialog } from "./BayarTagihanDialog";
 import { EditTagihanDialog } from "./EditTagihanDialog";
 import { cn } from "@/lib/utils";
-import { mutate } from "swr";
+import { useSWRConfig } from "swr";
+import { startOfDay } from "date-fns";
+import { useRouter } from "next/navigation";
 
 interface TagihanTableProps {
   data: Tagihan[];
@@ -46,29 +48,19 @@ type DisplayStatus = StatusPembayaran | "TERLAMBAT";
 const getStatusInfo = (
   tagihan: Tagihan
 ): { status: DisplayStatus; className: string } => {
+  // startOfDay memastikan kita membandingkan tanggal tanpa memperhitungkan waktu
   const isOverdue =
-    new Date(tagihan.tanggalJatuhTempo) < new Date() &&
+    startOfDay(new Date(tagihan.tanggalJatuhTempo)) < startOfDay(new Date()) &&
     tagihan.status === "BELUM_LUNAS";
 
   if (tagihan.status === "LUNAS") {
-    return {
-      status: "LUNAS",
-      className:
-        "bg-green-100 text-green-800 border-green-200 hover:bg-green-200",
-    };
+    return { status: "LUNAS", className: "bg-green-100 text-green-800" };
   }
   if (isOverdue) {
-    return {
-      status: "TERLAMBAT",
-      className: "bg-red-100 text-red-800 border-red-200 hover:bg-red-200",
-    };
+    return { status: "TERLAMBAT", className: "bg-red-100 text-red-800" };
   }
   // Defaultnya adalah BELUM_LUNAS
-  return {
-    status: "BELUM_LUNAS",
-    className:
-      "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200",
-  };
+  return { status: "BELUM_LUNAS", className: "bg-yellow-100 text-yellow-800" };
 };
 
 export function TagihanTable({
@@ -88,6 +80,8 @@ export function TagihanTable({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
+  const { cache, mutate } = useSWRConfig(); // Hook SWR untuk interaksi cache
 
   const handleBayar = (tagihan: Tagihan) => {
     setPembayaranTagihan(tagihan);
@@ -106,20 +100,49 @@ export function TagihanTable({
 
   const confirmDelete = async () => {
     if (!deleteTagihan) return;
-    setIsDeleting(true);
+
+    const tagihanListKey = "/api/keuangan/tagihan";
+    const statsKey = "/api/dashboard/stats";
+    const siswaListKey = "/api/siswa";
+
+    // 1. Ambil data saat ini dari cache untuk rollback jika gagal
+    const previousTagihanList = cache.get(tagihanListKey)?.data as
+      | Tagihan[]
+      | undefined;
+
+    // 2. Buat data optimis & perbarui UI secara instan
+    const optimisticData =
+      previousTagihanList?.filter((t) => t.id !== deleteTagihan.id) || [];
+    mutate(tagihanListKey, optimisticData, false);
+
+    // Tutup dialog dan tampilkan notifikasi loading
+    setIsDeleteOpen(false);
+    toast.loading("Menghapus tagihan...");
+
     try {
+      // 3. Kirim permintaan hapus ke API
       await api.deleteTagihan(deleteTagihan.id);
-      toast.success("Tagihan berhasil dihapus.");
-      mutate("api/keuangan/tagihan");
-      mutate("/api/siswa");
-      onDataChanged?.();
+
+      // 4. Jika berhasil, ganti notifikasi & picu validasi ulang untuk semua data terkait
+      toast.dismiss();
+      toast.success(`Tagihan berhasil dihapus.`);
+
+      // Revalidate (refresh) data dari server untuk memastikan konsistensi
+      mutate(tagihanListKey);
+      mutate(statsKey);
+      mutate(siswaListKey);
     } catch (error: any) {
+      // 5. Jika gagal, kembalikan UI ke kondisi semula (rollback)
+      toast.dismiss();
       const errorMessage =
-        error.response?.data?.error || "Gagal menghapus tagihan.";
+        error.response?.data?.error || "Gagal menghapus data tagihan.";
       toast.error(errorMessage);
+      if (previousTagihanList) {
+        mutate(tagihanListKey, previousTagihanList, false);
+      }
     } finally {
+      setDeleteTagihan(null);
       setIsDeleting(false);
-      setIsDeleteOpen(false);
     }
   };
 
@@ -167,7 +190,13 @@ export function TagihanTable({
                       {formatDate(tagihan.tanggalJatuhTempo, "dd MMM yyyy")}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn(className)}>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "border-transparent font-semibold",
+                          className
+                        )}
+                      >
                         {status.replace("_", " ")}
                       </Badge>
                     </TableCell>

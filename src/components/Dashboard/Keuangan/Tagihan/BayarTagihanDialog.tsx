@@ -32,26 +32,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
-import type { Tagihan, KategoriPemasukan } from "@/lib/types";
+import type { Tagihan } from "@/lib/types";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
 import { mutate } from "swr";
+import useSWR from "swr";
+import { createPemasukanSchema } from "@/lib/validation";
 
 // Skema validasi untuk form pembayaran
-const createPemasukanSchema = z.object({
-  jumlah: z.coerce.number().positive("Jumlah harus lebih dari 0"),
-  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
-  kategori: z.enum(["UANG_SEKOLAH", "UANG_PENDAFTARAN", "LAINNYA"]),
-  tagihanId: z.string(),
-});
 
 type PemasukanFormValues = z.infer<typeof createPemasukanSchema>;
-
-// Opsi untuk kategori pemasukan
-const kategoriOptions: { value: KategoriPemasukan; label: string }[] = [
-  { value: "UANG_SEKOLAH", label: "Uang Sekolah (SPP)" },
-  { value: "UANG_PENDAFTARAN", label: "Uang Pendaftaran" },
-  { value: "LAINNYA", label: "Lainnya" },
-];
 
 interface BayarTagihanDialogProps {
   tagihan: Tagihan | null;
@@ -60,12 +49,19 @@ interface BayarTagihanDialogProps {
   onPembayaranSuccess?: () => void;
 }
 
+const kategoriFetcher = (url: string) => api.getKategori("PEMASUKAN");
+
 export function BayarTagihanDialog({
   tagihan,
   open,
   onOpenChange,
   onPembayaranSuccess,
 }: BayarTagihanDialogProps) {
+  const { data: kategoriPemasukan, error: kategoriError } = useSWR(
+    open ? "/api/kategori?tipe=PEMASUKAN" : null,
+    kategoriFetcher
+  );
+
   const form = useForm<PemasukanFormValues>({
     resolver: zodResolver(createPemasukanSchema),
     defaultValues: {
@@ -83,11 +79,17 @@ export function BayarTagihanDialog({
       form.reset({
         jumlah: tagihan.jumlahTagihan,
         keterangan: tagihan.keterangan,
-        kategori: "UANG_SEKOLAH",
+        kategori: "Uang Sekolah (SPP)",
         tagihanId: tagihan.id,
       });
     }
   }, [tagihan, open, form]);
+
+  useEffect(() => {
+    if (kategoriError) {
+      toast.error("Gagal memuat kategori pemasukan.");
+    }
+  }, [kategoriError]);
 
   const onSubmit = async (values: PemasukanFormValues) => {
     try {
@@ -159,9 +161,9 @@ export function BayarTagihanDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {kategoriOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                      {(kategoriPemasukan || []).map((kategori) => (
+                        <SelectItem key={kategori.id} value={kategori.nama}>
+                          {kategori.nama}
                         </SelectItem>
                       ))}
                     </SelectContent>

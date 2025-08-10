@@ -43,9 +43,16 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import type { Kelas } from "@/lib/types";
+import type { Kelas, Siswa } from "@/lib/types";
 import { createSiswaSchema } from "@/lib/validation";
-import { mutate } from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
+
+const sppOptions = [
+  { value: 100000, label: "Rp 100.000" },
+  { value: 150000, label: "Rp 150.000" },
+  { value: 175000, label: "Rp 175.000" },
+  { value: 350000, label: "Rp 350.000" },
+];
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type SiswaFormValues = z.infer<typeof createSiswaSchema>;
@@ -55,6 +62,7 @@ interface AddSiswaDialogProps {
 }
 
 export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
+  const { mutate, cache } = useSWRConfig();
   const [open, setOpen] = useState(false);
   const [kelas, setKelas] = useState<Kelas[]>([]);
 
@@ -69,6 +77,7 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
       orangTua: "",
       kelasId: "",
       tanggalLahir: undefined,
+      jumlahSpp: undefined,
     },
   });
 
@@ -91,18 +100,54 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
   }, [open]);
 
   const onSubmit = async (values: SiswaFormValues) => {
+    const siswaListKey = "/api/siswa";
+    const kelasListKey = "/api/kelas";
+    const statsKey = "/api/dashboard/stats";
+
+    // 1. Ambil data saat ini dari cache untuk rollback jika gagal
+    const previousSiswa = cache.get(siswaListKey)?.data as Siswa[] | undefined;
+
+    // 2. Buat data optimis (tambahkan data baru ke daftar yang ada)
+    // Kita buat objek sementara untuk ditampilkan di UI
+    const optimisticSiswa = {
+      id: "temp-" + Date.now(), // ID sementara
+      ...values,
+      kelas: { nama: "Memuat..." }, // Placeholder untuk data relasi
+      jumlahTunggakan: 0,
+    };
+    const optimisticData = previousSiswa
+      ? [...previousSiswa, optimisticSiswa]
+      : [optimisticSiswa];
+
+    // 3. Perbarui UI secara instan tanpa memvalidasi ulang
+    mutate(siswaListKey, optimisticData, false);
+    toast.loading("Menambahkan siswa baru...");
+    setOpen(false);
+
     try {
+      // 4. Kirim permintaan ke API
       await api.createSiswa(values);
+
+      // 5. Jika berhasil, ganti notifikasi dan picu validasi ulang untuk semua data terkait
+      toast.dismiss();
       toast.success("Siswa baru berhasil ditambahkan!");
+
+      // Revalidate (refresh) data dari server untuk memastikan konsistensi
+      mutate(siswaListKey);
+      mutate(kelasListKey);
+      mutate(statsKey);
+
       form.reset();
-      setOpen(false);
-      mutate("/api/kelas");
       onSiswaAdded?.();
     } catch (error: any) {
-      console.error("Error creating siswa:", error);
+      // 6. Jika gagal, kembalikan UI ke kondisi semula (rollback) dan tampilkan error
+      toast.dismiss();
       const errorMessage =
         error.response?.data?.error || "Gagal menambahkan siswa.";
       toast.error(errorMessage);
+      if (previousSiswa) {
+        mutate(siswaListKey, previousSiswa, false);
+      }
     }
   };
 
@@ -123,20 +168,20 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="nama"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Lengkap</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nama lengkap siswa" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="nama"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Lengkap</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nama lengkap siswa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="nis"
@@ -150,6 +195,8 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                   </FormItem>
                 )}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="kelasId"
@@ -169,6 +216,36 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                         {kelas.map((k) => (
                           <SelectItem key={k.id} value={k.id}>
                             {k.nama}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="jumlahSpp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tingkat SPP</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih tingkatan SPP" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {sppOptions.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -313,6 +390,7 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
               name="alamat"
@@ -322,7 +400,7 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                   <FormControl>
                     <Textarea
                       placeholder="Alamat lengkap siswa"
-                      className="resize-none"
+                      className="resize-none min-h-[50px]"
                       {...field}
                     />
                   </FormControl>
@@ -330,6 +408,7 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                 </FormItem>
               )}
             />
+
             <DialogFooter className="gap-3">
               <DialogClose asChild>
                 <Button type="button" variant="secondary">

@@ -28,7 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { createKelasSchema } from "@/lib/validation";
-import { mutate } from "swr";
+import { useSWRConfig } from "swr";
+import { Kelas } from "@/lib/types";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type KelasFormValues = z.infer<typeof createKelasSchema>;
@@ -39,6 +40,7 @@ interface AddKelasDialogProps {
 
 export function AddKelasDialog({ onKelasAdded }: AddKelasDialogProps) {
   const [open, setOpen] = useState(false);
+  const { mutate, cache } = useSWRConfig();
 
   const form = useForm<KelasFormValues>({
     resolver: zodResolver(createKelasSchema),
@@ -51,19 +53,52 @@ export function AddKelasDialog({ onKelasAdded }: AddKelasDialogProps) {
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (values: KelasFormValues) => {
+    const kelasListKey = "/api/kelas";
+    const statsKey = "/api/dashboard/stats";
+
+    // 2. Ambil data saat ini dari cache untuk rollback
+    const previousKelasList = cache.get(kelasListKey)?.data as
+      | Kelas[]
+      | undefined;
+
+    // 3. Buat data optimis (tambahkan data baru ke daftar yang ada)
+    const optimisticKelas = {
+      id: "temp-" + Date.now(), // ID sementara
+      ...values,
+      jumlahSiswa: 0, // Nilai default untuk tampilan
+    };
+    const optimisticData = previousKelasList
+      ? [...previousKelasList, optimisticKelas]
+      : [optimisticKelas];
+
+    // 4. Perbarui UI secara instan
+    mutate(kelasListKey, optimisticData, false);
+    toast.loading("Menambahkan kelas baru...");
+    setOpen(false);
+
     try {
+      // 5. Kirim permintaan ke API
       await api.createKelas(values);
+
+      // 6. Jika berhasil, ganti notifikasi dan picu validasi ulang
+      toast.dismiss();
       toast.success("Kelas baru berhasil ditambahkan!");
-      mutate("api/kelas");
-      mutate("api/dasboard/stats");
+
+      // Revalidate (refresh) data dari server untuk memastikan konsistensi
+      mutate(kelasListKey);
+      mutate(statsKey);
 
       form.reset();
-      setOpen(false);
       onKelasAdded?.();
     } catch (error: any) {
+      // 7. Jika gagal, kembalikan UI ke kondisi semula (rollback)
+      toast.dismiss();
       const errorMessage =
         error.response?.data?.error || "Gagal menambahkan kelas.";
       toast.error(errorMessage);
+      if (previousKelasList) {
+        mutate(kelasListKey, previousKelasList, false);
+      }
     }
   };
 

@@ -12,8 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import type { Tagihan, StatusPembayaran } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { startOfDay } from "date-fns";
 
-interface TagihanHistoryTableProps {
+// The props interface name is now consistent with the component name.
+interface RiwayatTagihanTableProps {
   tagihan: Tagihan[];
 }
 
@@ -23,7 +25,8 @@ const getStatusInfo = (
   t: Tagihan
 ): { status: DisplayStatus; className: string } => {
   const isOverdue =
-    new Date(t.tanggalJatuhTempo) < new Date() && t.status === "BELUM_LUNAS";
+    startOfDay(new Date(t.tanggalJatuhTempo)) < startOfDay(new Date()) &&
+    t.status === "BELUM_LUNAS";
 
   if (t.status === "LUNAS") {
     return {
@@ -43,7 +46,7 @@ const getStatusInfo = (
   };
 };
 
-export function RiwayatTagihanTable({ tagihan }: TagihanHistoryTableProps) {
+export function RiwayatTagihanTable({ tagihan }: RiwayatTagihanTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -51,6 +54,8 @@ export function RiwayatTagihanTable({ tagihan }: TagihanHistoryTableProps) {
           <TableRow>
             <TableHead>Keterangan</TableHead>
             <TableHead>Jatuh Tempo</TableHead>
+            {/* This new column shows when a bill was paid. */}
+            <TableHead>Tanggal Bayar</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Jumlah</TableHead>
           </TableRow>
@@ -65,12 +70,24 @@ export function RiwayatTagihanTable({ tagihan }: TagihanHistoryTableProps) {
                   <TableCell>
                     {formatDate(t.tanggalJatuhTempo, "dd MMM yyyy")}
                   </TableCell>
+                  {/* The cell conditionally displays the payment date. */}
                   <TableCell>
-                    <Badge variant="outline" className={cn(className)}>
+                    {t.pemasukan
+                      ? formatDate(t.pemasukan.tanggal, "dd MMM yyyy")
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "border-transparent font-semibold",
+                        className
+                      )}
+                    >
                       {status.replace("_", " ")}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right font-semibold">
                     Rp {t.jumlahTagihan.toLocaleString("id-ID")}
                   </TableCell>
                 </TableRow>
@@ -79,7 +96,7 @@ export function RiwayatTagihanTable({ tagihan }: TagihanHistoryTableProps) {
           ) : (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={5} // The colspan is updated to match the new number of columns.
                 className="h-24 text-center text-muted-foreground"
               >
                 Tidak ada riwayat tagihan.

@@ -23,16 +23,16 @@ import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Edit, Trash2, Eye, ArrowUpDown } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Siswa as SiswaType } from "@/lib/types";
-import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { EditSiswaDialog } from "./EditSiswaDialog";
 import { toast } from "sonner";
+import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { mutate } from "swr";
 
 interface SiswaWithTunggakan extends SiswaType {
   jumlahTunggakan: number;
 }
 
-type SortableKeys = "nis" | "nama" | "kelas";
+type SortableKeys = "nis" | "nama" | "kelas" | "jumlahSpp";
 
 interface SiswaTableProps {
   data: SiswaWithTunggakan[];
@@ -40,7 +40,7 @@ interface SiswaTableProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (direction: "next" | "prev") => void;
-  startIndex: number; // Prop baru untuk nomor awal
+  startIndex: number;
 }
 
 export function SiswaTable({
@@ -111,20 +111,41 @@ export function SiswaTable({
 
   const confirmDelete = async () => {
     if (!deleteSiswa) return;
-    setIsDeleting(true);
+    // Data sebelum dihapus, untuk rollback jika gagal
+    const previousSiswa = data;
+
+    // 2. Optimistic Update: Hapus siswa dari daftar di UI secara instan
+    const optimisticData = data.filter((s) => s.id !== deleteSiswa.id);
+    // Perbarui cache SWR tanpa memicu re-fetch
+    mutate("/api/siswa", optimisticData, false);
+    mutate("/api/kelas", optimisticData, false);
+
+    // Tutup dialog segera
+    setIsDeleteOpen(false);
+    toast.loading("Menghapus siswa..."); // Tampilkan notifikasi loading
+
     try {
+      // 3. Kirim permintaan hapus ke API
       await api.deleteSiswa(deleteSiswa.id);
+
+      // Ganti notifikasi loading dengan notifikasi sukses
+      toast.dismiss(); // Hapus notifikasi loading
       toast.success(`Siswa "${deleteSiswa.nama}" berhasil dihapus.`);
+
+      // 4. (Opsional) Picu re-fetch untuk memastikan data 100% sinkron
+      mutate("/api/siswa");
       mutate("/api/kelas");
-      onDataChanged?.();
     } catch (error: any) {
+      // 5. Jika gagal, kembalikan data ke kondisi semula (rollback)
+      toast.dismiss();
       const errorMessage =
-        error.response?.data?.error || "Gagal menghapus siswa.";
+        error.response?.data?.error || "Gagal menghapus data siswa.";
       toast.error(errorMessage);
+      mutate("/api/siswa", previousSiswa, false); // Kembalikan data lama
+      mutate("/api/kelas", previousSiswa, false); // Kembalikan data lama
     } finally {
-      setIsDeleting(false);
-      setIsDeleteOpen(false);
       setDeleteSiswa(null);
+      setIsDeleting(false);
     }
   };
 
@@ -144,24 +165,31 @@ export function SiswaTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">No.</TableHead>
-              <TableHead>
+              <TableHead className="w-[50px] text-center">No.</TableHead>
+              <TableHead className="text-center">
                 <Button variant="ghost" onClick={() => requestSort("nis")}>
                   NIS <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="text-center">
                 <Button variant="ghost" onClick={() => requestSort("nama")}>
                   Nama <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="text-center">
                 <Button variant="ghost" onClick={() => requestSort("kelas")}>
                   Kelas <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>Jenis Kelamin</TableHead>
-              <TableHead>Status Pembayaran</TableHead>
+              <TableHead className="text-center">Status Pembayaran</TableHead>
+              <TableHead className="text-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => requestSort("jumlahSpp")}
+                >
+                  Jumlah SPP <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
               <TableHead className="w-[100px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -169,20 +197,17 @@ export function SiswaTable({
             {sortedData.length > 0 ? (
               sortedData.map((siswa, index) => (
                 <TableRow key={siswa.id}>
-                  <TableCell className="font-semibold">
-                    {startIndex + index + 1}.
+                  <TableCell className="font-medium text-center">
+                    {startIndex + index + 1}
                   </TableCell>
-                  <TableCell>{siswa.nis}</TableCell>
-                  <TableCell>{siswa.nama}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">{siswa.nis}</TableCell>
+                  <TableCell className="text-center">{siswa.nama}</TableCell>
+                  <TableCell className="text-center">
                     {typeof siswa.kelas === "string"
                       ? siswa.kelas
                       : siswa.kelas?.nama || "-"}
                   </TableCell>
-                  <TableCell>
-                    {siswa.jenisKelamin === "L" ? "Laki-laki" : "Perempuan"}
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge
                       variant={
                         siswa.jumlahTunggakan > 0 ? "destructive" : "default"
@@ -198,6 +223,10 @@ export function SiswaTable({
                         : "Lunas"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    Rp {siswa.jumlahSpp.toLocaleString("id-ID")}
+                  </TableCell>
+
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -231,7 +260,7 @@ export function SiswaTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={7} // <-- Diperbarui menjadi 7
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data siswa yang ditemukan.
@@ -242,6 +271,8 @@ export function SiswaTable({
           <TableFooter>
             <TableRow>
               <TableCell colSpan={7}>
+                {" "}
+                {/* <-- Diperbarui menjadi 7 */}
                 <div className="flex items-center justify-end space-x-4">
                   <span className="text-sm font-medium text-muted-foreground">
                     Halaman {currentPage} dari {totalPages}

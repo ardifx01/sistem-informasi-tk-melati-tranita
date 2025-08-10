@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useParams, useRouter } from "next/navigation";
 import { Search, User, LogOut, Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,21 +16,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { SidebarContent } from "./Sidebar";
 import { api } from "@/lib/api";
 import type { Siswa } from "@/lib/types";
+import useSWR from "swr";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 // --- KOMPONEN BREADCRUMB BARU ---
-// Komponen mandiri untuk menampilkan navigasi breadcrumb.
+// Fetcher khusus untuk mengambil data siswa berdasarkan ID
+const siswaFetcher = (url: string) => api.getSiswaById(url.split("/").pop()!);
+
 function Breadcrumbs() {
   const pathname = usePathname();
-  // Memecah URL menjadi segmen dan memfilter string kosong
+  const params = useParams();
   const segments = pathname.split("/").filter(Boolean);
+
+  // Cek apakah kita berada di halaman detail siswa
+  const isSiswaDetailPage =
+    segments[0] === "dashboard" &&
+    segments[1] === "siswa" &&
+    segments.length === 3;
+  const siswaId = isSiswaDetailPage ? (params.id as string) : null;
+
+  // Ambil data siswa hanya jika kita berada di halaman detail
+  const { data: siswa, isLoading } = useSWR<Siswa>(
+    siswaId ? `/api/siswa/${siswaId}` : null, // Kunci SWR akan null jika tidak di halaman detail
+    siswaFetcher
+  );
 
   // Jangan tampilkan breadcrumb di halaman dashboard utama
   if (segments.length <= 1) {
-    return <div className="hidden flex-1 md:flex" />; // Tetap berikan div agar layout tidak bergeser
+    return <div className="hidden flex-1 md:flex" />;
   }
 
   return (
@@ -47,10 +63,21 @@ function Breadcrumbs() {
         {segments.slice(1).map((segment, index) => {
           const href = `/${segments.slice(0, index + 2).join("/")}`;
           const isLast = index === segments.length - 2;
-          // Mengubah format nama (misal: "pemasukan" menjadi "Pemasukan")
-          const name = segment
-            .replace("-", " ")
+
+          let name = segment
+            .replace(/-/g, " ")
             .replace(/\b\w/g, (l) => l.toUpperCase());
+
+          // Logika untuk mengganti ID dengan nama siswa
+          if (isSiswaDetailPage && isLast) {
+            if (isLoading) {
+              name = "..."; // Tampilan saat loading
+            } else if (siswa) {
+              name = siswa.nama; // Gunakan nama siswa jika sudah ada
+            } else {
+              name = "Detail Siswa"; // Fallback
+            }
+          }
 
           return (
             <li key={href}>
@@ -107,7 +134,7 @@ function SearchResults({
           className="block px-4 py-2 text-sm hover:bg-muted"
           onClick={() => {
             router.push(`/dashboard/siswa/${siswa.id}`);
-            onSelect(); // Menutup hasil pencarian setelah diklik
+            onSelect();
           }}
         >
           <p className="font-semibold">{siswa.nama}</p>
@@ -158,7 +185,6 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      {/* Tombol Sidebar Mobile */}
       <div className="lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
@@ -174,11 +200,9 @@ export function Topbar() {
 
       <div className="h-6 w-px bg-gray-200 lg:hidden" aria-hidden="true" />
 
-      {/* Breadcrumbs untuk Desktop */}
       <Breadcrumbs />
 
       <div className="flex flex-1 items-center justify-end gap-x-4 self-stretch lg:gap-x-6">
-        {/* Formulir Pencarian Global */}
         <div className="relative">
           <label htmlFor="search-field" className="sr-only">
             Cari Siswa
@@ -214,13 +238,11 @@ export function Topbar() {
         </div>
 
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          {/* Ikon Notifikasi telah dihapus */}
           <div
             className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200"
             aria-hidden="true"
           />
 
-          {/* Dropdown Profil Pengguna */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 p-1.5">

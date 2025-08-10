@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -43,26 +42,23 @@ import { Calendar } from "@/components/ui/calendar";
 import { api } from "@/lib/api";
 import type { Kelas, Siswa } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { CurrencyInput } from "@/components/shared/CurrencyInput";
-import { mutate } from "swr";
+import { useSWRConfig } from "swr";
+import { createTagihanSchema, type TagihanInput } from "@/lib/validation";
 
-// Skema validasi Zod
-const createTagihanSchema = z.object({
-  kelasId: z.string({ required_error: "Pilihan kelas harus diisi." }),
-  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
-  jumlahTagihan: z.coerce.number().positive("Jumlah harus angka positif."),
-  tanggalJatuhTempo: z.date({
-    required_error: "Tanggal jatuh tempo harus diisi.",
-  }),
-});
+type TagihanFormValues = TagihanInput;
 
-type TagihanFormValues = z.infer<typeof createTagihanSchema>;
+interface CreateTagihanApiResponse {
+  message?: string;
+  skipped?: number;
+  count?: number;
+}
 
 interface AddTagihanDialogProps {
   onTagihanAdded?: () => void;
 }
 
 export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
+  const { mutate } = useSWRConfig();
   const [open, setOpen] = useState(false);
   const [kelas, setKelas] = useState<Kelas[]>([]);
 
@@ -81,14 +77,11 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
 
   const onSubmit = async (values: TagihanFormValues) => {
     try {
-      let siswaUntukTagihan: { id: string }[] = [];
+      let siswaUntukTagihan: { id: string; jumlahSpp: number }[] = [];
 
-      // Cek apakah pengguna memilih "Semua Kelas"
       if (values.kelasId === "all") {
-        // Jika ya, ambil semua siswa dari semua kelas
-        siswaUntukTagihan = await api.getSiswa(); // Asumsi getSiswa mengembalikan semua siswa
+        siswaUntukTagihan = await api.getSiswa();
       } else {
-        // Jika tidak, ambil siswa dari kelas yang spesifik
         siswaUntukTagihan = await api.getSiswaByKelas(values.kelasId);
       }
 
@@ -100,20 +93,41 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
       const tagihanBaru = siswaUntukTagihan.map((siswa) => ({
         siswaId: siswa.id,
         keterangan: values.keterangan,
-        jumlahTagihan: values.jumlahTagihan,
+        jumlahTagihan: siswa.jumlahSpp,
         tanggalJatuhTempo: values.tanggalJatuhTempo,
       }));
 
-      await api.createTagihan(tagihanBaru);
-      toast.success(`Berhasil membuat ${tagihanBaru.length} tagihan baru!`);
-      mutate("api/keuangan/tagihan");
+      const response = (await api.createTagihan(
+        tagihanBaru
+      )) as CreateTagihanApiResponse;
+      // Cek apakah ada tagihan yang berhasil dibuat
+      if (response.count && response.count > 0) {
+        let successMessage =
+          response.message ||
+          `Berhasil membuat ${response.count} tagihan baru.`;
+        if (response.skipped && response.skipped > 0) {
+          successMessage += ` ${response.skipped} siswa dilewati.`;
+        }
+        toast.success(successMessage);
+      } else {
+        // Jika tidak ada yang dibuat, tampilkan sebagai peringatan
+        toast.warning(
+          response.message || "Tidak ada tagihan baru yang dibuat."
+        );
+      }
+
+      // Memicu refresh data di halaman terkait
+      mutate("/api/keuangan/tagihan");
       mutate("/api/siswa");
+      mutate("/api/dashboard/stats");
 
       form.reset();
       setOpen(false);
       onTagihanAdded?.();
-    } catch (error) {
-      toast.error("Gagal membuat tagihan.");
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.error || "Gagal membuat tagihan.";
+      toast.error(errorMessage);
       console.error("Error creating bulk tagihan:", error);
     }
   };
@@ -175,23 +189,6 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
                     <Input
                       placeholder="Contoh: SPP Bulan September 2025"
                       {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="jumlahTagihan"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Jumlah Tagihan (Rp)</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      placeholder="Contoh: 200.000"
-                      value={field.value ?? 0}
-                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

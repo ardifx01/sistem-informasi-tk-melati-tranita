@@ -104,10 +104,24 @@ export function PengeluaranTable({
 
   const confirmDelete = async () => {
     if (!deleteItem) return;
-    setIsDeleting(true);
+    const previousItem = data;
+
+    const optimisticData = data.filter((s) => s.id !== deleteItem.id);
+    // Perbarui cache SWR tanpa memicu re-fetch
+
+    mutate("/api/dashboard/stats", optimisticData, false);
+    mutate("/api/keuangan/pengeluaran", optimisticData, false);
+
+    // Tutup dialog segera
+    setIsDeleteOpen(false);
+    toast.loading("Menghapus pengeluaran..."); // Tampilkan notifikasi loading
+
     try {
       await api.deletePengeluaran(deleteItem.id);
-      toast.success("Data pengeluaran berhasil dihapus.");
+
+      // Ganti notifikasi loading dengan notifikasi sukses
+      toast.dismiss(); // Hapus notifikasi loading
+      toast.success(`Pengeluaran "${deleteItem.keterangan}" berhasil dihapus.`);
 
       // Beri tahu SWR untuk memuat ulang data yang relevan
       mutate("/api/dashboard/stats");
@@ -115,12 +129,14 @@ export function PengeluaranTable({
 
       onDataChanged?.();
     } catch (error: any) {
+      toast.dismiss();
       const errorMessage =
-        error.response?.data?.error || "Gagal menghapus data.";
+        error.response?.data?.error || "Gagal menghapus data pengeluaran.";
       toast.error(errorMessage);
+      mutate("/api/dashboard/stats", previousItem, false); // Kembalikan data lama
+      mutate("/api/keuangan/pengeluaran", previousItem, false); // Kembalikan data lama
     } finally {
       setIsDeleting(false);
-      setIsDeleteOpen(false);
       setDeleteItem(null);
     }
   };

@@ -18,23 +18,17 @@ import {
 import { formatDate } from "@/lib/utils";
 import type { DashboardStats } from "@/lib/types";
 
-interface TunggakanTeratasProps extends DashboardStats {
-  data: Array<{
-    id: string | number;
-    siswa: { nama: string };
-    keterangan: string;
-    tanggalJatuhTempo: string | Date;
-    jumlahTagihan: number;
-  }>;
+interface TunggakanTeratasProps {
+  data: DashboardStats["tunggakanTeratas"];
 }
 
 export function TunggakanTeratas({ data }: TunggakanTeratasProps) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Daftar Tunggakan Teratas</CardTitle>
         <CardDescription>
-          Menampilkan 5 tagihan terlama yang belum lunas.
+          Menampilkan 5 tagihan terlama yang telah melewati tanggal jatuh tempo.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -47,7 +41,7 @@ export function TunggakanTeratas({ data }: TunggakanTeratasProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length > 0 ? (
+            {data && data.length > 0 ? (
               data.map((tunggakan) => (
                 <TableRow key={tunggakan.id}>
                   <TableCell>
@@ -66,8 +60,11 @@ export function TunggakanTeratas({ data }: TunggakanTeratasProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  Tidak ada tunggakan.
+                <TableCell
+                  colSpan={3}
+                  className="h-24 text-center items-center"
+                >
+                  Tidak ada tunggakan yang terlambat.
                 </TableCell>
               </TableRow>
             )}

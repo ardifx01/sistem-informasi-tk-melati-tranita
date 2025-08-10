@@ -23,6 +23,7 @@ import type { Kelas } from "@/lib/types";
 import { EditKelasDialog } from "./EditKelasDialog";
 import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 interface KelasTableProps {
   data: Kelas[];
@@ -51,19 +52,37 @@ export function KelasTable({ data, onDataChanged }: KelasTableProps) {
   const confirmDelete = async () => {
     if (!deleteKelas) return;
 
-    setIsDeleting(true);
+    const previousKelas = data;
+
+    const optimisticData = data.filter((s) => s.id !== deleteKelas.id);
+    // Perbarui cache SWR tanpa memicu re-fetch
+
+    mutate("/api/kelas", optimisticData, false);
+    mutate("/api/siswa", optimisticData, false);
+
+    // Tutup dialog segera
+    setIsDeleteOpen(false);
+    toast.loading("Menghapus kelas..."); // Tampilkan notifikasi loading
+
     try {
       await api.deleteKelas(deleteKelas.id);
+
+      toast.dismiss(); // Hapus notifikasi loading
       toast.success(`Kelas "${deleteKelas.nama}" berhasil dihapus.`);
+
+      mutate("/api/kelas");
+      mutate("/api/siswa");
       onDataChanged?.(); // Memuat ulang data setelah sukses
     } catch (error: any) {
       // Ambil pesan error spesifik dari respons API
+      toast.dismiss();
       const errorMessage =
         error.response?.data?.error || "Gagal menghapus kelas.";
       toast.error(errorMessage);
+      mutate("/api/dashboard/stats", previousKelas, false); // Kembalikan data lama
+      mutate("/api/keuangan/pengeluaran", previousKelas, false); // Kembalikan data lama
     } finally {
       setIsDeleting(false);
-      setIsDeleteOpen(false);
       setDeleteKelas(null);
     }
   };

@@ -23,9 +23,10 @@ import { type Pemasukan } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { DeleteDialog } from "@/components/shared/DeleteDialog";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 // Menentukan tipe data yang bisa di-sort
-type SortableKeys = "tanggal" | "nama" | "jumlah";
+type SortableKeys = "tanggal" | "nama" | "jumlah" | "kategori";
 
 interface PemasukanTableProps {
   data: Pemasukan[];
@@ -99,18 +100,36 @@ export function PemasukanTable({
 
   const confirmDelete = async () => {
     if (!deleteItem) return;
-    setIsDeleting(true);
+
+    const previousItem = data;
+
+    const optimisticData = data.filter((s) => s.id !== deleteItem.id);
+    // Perbarui cache SWR tanpa memicu re-fetch
+
+    mutate("/api/dashboard/stats", optimisticData, false);
+    mutate("/api/keuangan/pemasukan", optimisticData, false);
+
+    // Tutup dialog segera
+    setIsDeleteOpen(false);
+    toast.loading("Menghapus pemasukan..."); // Tampilkan notifikasi loading
     try {
       await api.deletePemasukan(deleteItem.id);
-      toast.success("Pembayaran berhasil dibatalkan.");
+
+      toast.dismiss();
+      toast.success(`Pembayaran ${deleteItem.keterangan} berhasil dibatalkan.`);
+      mutate("/api/dashboard/stats");
+      mutate("/api/keuangan/pemasukan");
+
       onDataChanged?.();
     } catch (error: any) {
+      toast.dismiss();
       const errorMessage =
-        error.response?.data?.error || "Gagal membatalkan pembayaran.";
+        error.response?.data?.error || "Gagal menghapus data pembayaran.";
       toast.error(errorMessage);
+      mutate("/api/dashboard/stats", previousItem, false);
+      mutate("/api/keuangan/pemasukan", previousItem, false);
     } finally {
       setIsDeleting(false);
-      setIsDeleteOpen(false);
       setDeleteItem(null);
     }
   };
@@ -135,6 +154,13 @@ export function PemasukanTable({
               </TableHead>
               <TableHead>Kelas</TableHead>
               <TableHead>Keterangan</TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => requestSort("kategori")}>
+                  Kategori
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+
               <TableHead className="text-right">
                 <Button variant="ghost" onClick={() => requestSort("jumlah")}>
                   Jumlah
@@ -158,6 +184,7 @@ export function PemasukanTable({
                     {item.tagihan?.siswa?.kelas?.nama || "-"}
                   </TableCell>
                   <TableCell>{item.keterangan}</TableCell>
+                  <TableCell>{item.kategori}</TableCell>
                   <TableCell className="text-right">
                     Rp {item.jumlah.toLocaleString("id-ID")}
                   </TableCell>
@@ -185,7 +212,7 @@ export function PemasukanTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data pemasukan yang ditemukan.

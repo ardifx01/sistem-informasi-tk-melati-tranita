@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import type { Kelas } from "@/lib/types";
 import { updateKelasSchema } from "@/lib/validation";
-import { mutate } from "swr";
+import { mutate, useSWRConfig } from "swr";
 
 // Tipe untuk nilai form, diambil dari skema Zod
 type KelasFormValues = z.infer<typeof updateKelasSchema>;
@@ -45,6 +45,8 @@ export function EditKelasDialog({
   onOpenChange,
   onKelasUpdated,
 }: EditKelasDialogProps) {
+  const { cache, mutate } = useSWRConfig(); // Gunakan hook SWR
+
   const form = useForm<KelasFormValues>({
     resolver: zodResolver(updateKelasSchema),
     defaultValues: {
@@ -68,18 +70,45 @@ export function EditKelasDialog({
   const onSubmit = async (values: KelasFormValues) => {
     if (!kelas) return;
 
-    try {
-      await api.updateKelas(kelas.id, values);
-      toast.success("Data kelas berhasil diperbarui!");
-      mutate("api/kelas");
-      mutate("api/dasboard/stats");
+    const kelasListKey = "/api/kelas";
+    const statsKey = "/api/dashboard/stats";
 
-      onOpenChange(false);
+    // 2. Ambil data saat ini dari cache untuk rollback
+    const previousKelasList = cache.get(kelasListKey)?.data as
+      | Kelas[]
+      | undefined;
+
+    // 3. Buat data optimis
+    const optimisticData =
+      previousKelasList?.map((item) =>
+        item.id === kelas.id ? { ...item, ...values } : item
+      ) || [];
+
+    // 4. Perbarui UI secara instan
+    mutate(kelasListKey, optimisticData, false);
+    toast.loading("Menyimpan perubahan...");
+    onOpenChange(false);
+
+    try {
+      // 5. Kirim permintaan ke API
+      await api.updateKelas(kelas.id, values);
+
+      // 6. Jika berhasil, ganti notifikasi dan picu validasi ulang
+      toast.dismiss();
+      toast.success("Data kelas berhasil diperbarui!");
+      mutate(kelasListKey);
+      mutate(statsKey); // Pastikan path benar: /api/dashboard/stats
+
       onKelasUpdated?.();
     } catch (error: any) {
+      // 7. Jika gagal, kembalikan UI ke kondisi semula (rollback)
+      toast.dismiss();
       const errorMessage =
         error.response?.data?.error || "Gagal memperbarui data kelas.";
       toast.error(errorMessage);
+      if (previousKelasList) {
+        mutate(kelasListKey, previousKelasList, false);
+      }
     }
   };
 

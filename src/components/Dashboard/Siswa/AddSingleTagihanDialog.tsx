@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeID } from "date-fns/locale";
+import { mutate } from "swr"; // <-- 1. Impor mutate
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,73 +34,64 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { api } from "@/lib/api";
-import type { Tagihan } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
-import { mutate } from "swr";
+import { createSingleTagihanSchema } from "@/lib/validation";
 
-// Skema validasi Zod untuk update tagihan
-const updateTagihanSchema = z.object({
-  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
-  jumlahTagihan: z.coerce.number().positive("Jumlah harus angka positif."),
-  tanggalJatuhTempo: z.date({
-    required_error: "Tanggal jatuh tempo harus diisi.",
-  }),
-});
+type FormValues = z.infer<typeof createSingleTagihanSchema>;
 
-type TagihanFormValues = z.infer<typeof updateTagihanSchema>;
-
-interface EditTagihanDialogProps {
-  tagihan: Tagihan | null;
+interface AddSingleTagihanDialogProps {
+  siswaId: string;
+  siswaNama: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTagihanUpdated?: () => void;
+  onTagihanAdded?: () => void;
 }
 
-export function EditTagihanDialog({
-  tagihan,
+export function AddSingleTagihanDialog({
+  siswaId,
+  siswaNama,
   open,
   onOpenChange,
-  onTagihanUpdated,
-}: EditTagihanDialogProps) {
-  const form = useForm<TagihanFormValues>({
-    resolver: zodResolver(updateTagihanSchema),
+  onTagihanAdded,
+}: AddSingleTagihanDialogProps) {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(createSingleTagihanSchema),
+    defaultValues: {
+      keterangan: "",
+      jumlahTagihan: 0,
+      tanggalJatuhTempo: new Date(),
+      siswaId: siswaId,
+    },
   });
 
-  useEffect(() => {
-    if (tagihan) {
-      form.reset({
-        keterangan: tagihan.keterangan,
-        jumlahTagihan: tagihan.jumlahTagihan,
-        tanggalJatuhTempo: new Date(tagihan.tanggalJatuhTempo),
-      });
-    }
-  }, [tagihan, form]);
-
-  const onSubmit = async (values: TagihanFormValues) => {
-    if (!tagihan) return;
-
+  const onSubmit = async (values: FormValues) => {
     try {
-      await api.updateTagihan(tagihan.id, values);
-      toast.success("Tagihan berhasil diperbarui!");
-      mutate("api/keuangan/tagihan");
-      mutate("api/siswa");
+      // API call tidak berubah
+      await api.createTagihan(values);
+      toast.success(`Tagihan baru untuk ${siswaNama} berhasil dibuat!`);
+
+      // --- 2. PERBARUI DATA SECARA REAL-TIME ---
+      // Memicu refresh data di halaman-halaman yang relevan
+      mutate(`/api/siswa/${siswaId}`); // Untuk halaman detail siswa ini
+      mutate("/api/keuangan/tagihan"); // Untuk halaman manajemen tagihan
+      mutate("/api/dashboard/stats"); // Untuk statistik di dashboard
+
+      form.reset();
       onOpenChange(false);
-      onTagihanUpdated?.();
+      onTagihanAdded?.();
     } catch (error) {
-      toast.error("Gagal memperbarui tagihan.");
+      toast.error("Gagal membuat tagihan.");
     }
   };
-
-  if (!tagihan) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Tagihan</DialogTitle>
+          <DialogTitle>Buat Tagihan Baru</DialogTitle>
           <DialogDescription>
-            Perbarui detail tagihan untuk siswa {tagihan.siswa.nama}.
+            Membuat tagihan spesifik untuk siswa: <strong>{siswaNama}</strong>.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -110,10 +101,10 @@ export function EditTagihanDialog({
               name="keterangan"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Keterangan</FormLabel>
+                  <FormLabel>Keterangan Tagihan</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Contoh: SPP Bulan September 2025"
+                      placeholder="Contoh: Uang Kegiatan Karyawisata"
                       {...field}
                     />
                   </FormControl>
@@ -128,16 +119,11 @@ export function EditTagihanDialog({
                 <FormItem>
                   <FormLabel>Jumlah Tagihan (Rp)</FormLabel>
                   <FormControl>
-                    {/* <Input type="number" placeholder="150000" {...field} /> */}
                     <CurrencyInput
-                      placeholder="Contoh: 200.000"
-                      value={field.value ?? 0}
+                      value={field.value}
                       onChange={field.onChange}
                     />
                   </FormControl>
-                  <FormMessage className="text-gray-400">
-                    Jumlah tagihan otomatis saat tagihan dibuat
-                  </FormMessage>
                   <FormMessage />
                 </FormItem>
               )}
@@ -173,9 +159,6 @@ export function EditTagihanDialog({
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
-                        captionLayout="dropdown"
-                        fromYear={2025}
-                        toYear={new Date().getFullYear()} // Tahun saat ini
                       />
                     </PopoverContent>
                   </Popover>
@@ -188,14 +171,11 @@ export function EditTagihanDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={form.formState.isSubmitting}
               >
                 Batal
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? "Menyimpan..."
-                  : "Simpan Perubahan"}
+                {form.formState.isSubmitting ? "Membuat..." : "Buat Tagihan"}
               </Button>
             </DialogFooter>
           </form>
