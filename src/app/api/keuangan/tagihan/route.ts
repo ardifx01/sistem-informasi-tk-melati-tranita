@@ -73,25 +73,13 @@ export async function POST(request: Request) {
     const existingTagihan = await prisma.tagihan.findMany({
       where: {
         siswaId: { in: siswaIds },
-        AND: [
-          {
-            // Ekstrak bulan dan tahun dari tanggalJatuhTempo di database
-            // Ini adalah sintaks spesifik Prisma untuk SQLite/PostgreSQL
-            // Jika menggunakan PostgreSQL, ini akan lebih efisien
-            OR: [
-              {
-                tanggalJatuhTempo: {
-                  gte: new Date(targetYear, targetMonth, 1),
-                },
-              },
-              {
-                tanggalJatuhTempo: {
-                  lt: new Date(targetYear, targetMonth + 1, 1),
-                },
-              },
-            ],
-          },
-        ],
+        // Cek juga keterangannya untuk memastikan ini adalah tagihan yang sama (misal: "SPP Bulan September")
+        keterangan: dataToCreate[0].keterangan,
+        // PERBAIKAN: Menggunakan AND untuk memastikan tanggal berada di dalam rentang bulan yang sama
+        tanggalJatuhTempo: {
+          gte: new Date(targetYear, targetMonth, 1), // Lebih besar atau sama dengan awal bulan
+          lt: new Date(targetYear, targetMonth + 1, 1), // Lebih kecil dari awal bulan berikutnya
+        },
       },
       select: { siswaId: true },
     });
