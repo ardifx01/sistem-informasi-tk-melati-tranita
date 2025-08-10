@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { updateKategoriSchema } from "@/lib/validation";
-import type { Kategori } from "@/lib/types";
+import type { Kategori, UpdateKategoriRequest } from "@/lib/types";
 import { mutate } from "swr";
 
 type FormValues = z.infer<typeof updateKategoriSchema>;
@@ -54,7 +54,13 @@ export function EditKategoriDialog({
   const onSubmit = async (values: FormValues) => {
     if (!kategori) return;
     try {
-      await api.updateKategori(kategori.id, values);
+      if (!values.nama) {
+        toast.error("Nama kategori tidak boleh kosong.");
+        return; // Hentikan eksekusi fungsi
+      }
+
+      await api.updateKategori(kategori.id, values as UpdateKategoriRequest);
+
       toast.success("Kategori berhasil diperbarui.");
       mutate("/api/kategori"); // Memicu refresh data
       onOpenChange(false);
