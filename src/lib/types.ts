@@ -29,6 +29,7 @@ export interface Siswa {
   alamat: string;
   telepon: string;
   orangTua: string;
+  jumlahSpp: number;
   kelasId: string;
   kelas: Kelas | string;
   tagihan?: Tagihan[];
@@ -44,6 +45,7 @@ export interface CreateSiswaRequest {
   alamat: string;
   telepon: string;
   orangTua: string;
+  jumlahSpp: number;
   kelasId: string;
 }
 
@@ -55,6 +57,7 @@ export interface UpdateSiswaRequest {
   alamat?: string;
   telepon?: string;
   orangTua?: string;
+  jumlahSpp?: number;
   kelasId?: string;
 }
 
@@ -70,7 +73,7 @@ export interface Kelas {
 }
 
 // tagihan
-export type StatusPembayaran = "BELUM_LUNAS" | "LUNAS" | "TERLAMBAT";
+export type StatusPembayaran = "BELUM_LUNAS" | "LUNAS";
 
 export interface Tagihan {
   id: string;
@@ -93,16 +96,6 @@ export interface CreateTagihanRequest {
   tanggalJatuhTempo: Date;
 }
 
-//kategori pemasukan dan pengeluaran
-export type KategoriPemasukan = "UANG_SEKOLAH" | "UANG_PENDAFTARAN" | "LAINNYA";
-export type KategoriPengeluaran =
-  | "ATK"
-  | "OPERASIONAL"
-  | "GAJI_GURU"
-  | "KEGIATAN_SISWA"
-  | "PERAWATAN_ASET"
-  | "LAINNYA";
-
 // pemasukan
 export interface Pemasukan {
   tagihan: any;
@@ -110,7 +103,7 @@ export interface Pemasukan {
   tanggal: string | Date;
   jumlah: number;
   keterangan: string;
-  kategori: KategoriPemasukan;
+  kategori: string;
   siswaId: string;
   siswa: Siswa; // Relasi ke siswa yang membayar
   createdAt?: string | Date;
@@ -120,7 +113,7 @@ export interface Pemasukan {
 export interface CreatePemasukanRequest {
   jumlah: number;
   keterangan: string;
-  kategori: KategoriPemasukan;
+  kategori: string;
   tagihanId: string;
 }
 
@@ -130,7 +123,7 @@ export interface Pengeluaran {
   tanggal: string | Date;
   jumlah: number;
   keterangan: string;
-  kategori: KategoriPengeluaran;
+  kategori: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -139,7 +132,28 @@ export interface CreatePengeluaranRequest {
   tanggal: Date;
   jumlah: number;
   keterangan: string;
-  kategori: KategoriPengeluaran;
+  kategori: string;
+}
+
+//kategori
+export interface Kategori {
+  id: string;
+  nama: string;
+  tipe: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface CreateKategoriRequest {
+  nama: string;
+  tipe: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+// Tipe untuk data yang dikirim saat memperbarui kategori
+export interface UpdateKategoriRequest {
+  nama: string;
 }
 
 // dashboard Stats
@@ -171,7 +185,7 @@ export interface DashboardStats {
     count: number;
   }>;
   kategoriPengeluaranDistribution: Array<{
-    kategori: KategoriPengeluaran;
+    kategori: string;
     total: number;
   }>;
   recentTransactions: Array<{

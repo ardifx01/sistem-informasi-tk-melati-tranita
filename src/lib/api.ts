@@ -12,6 +12,9 @@ import {
   type Pengeluaran,
   type CreatePengeluaranRequest,
   LoginResponse,
+  Kategori,
+  CreateKategoriRequest,
+  UpdateKategoriRequest,
 } from "@/lib/types";
 
 async function fetchAPI<T>(
@@ -91,9 +94,10 @@ export const api = {
     return fetchAPI(`/siswa/${id}`);
   },
 
-  getSiswaByKelas: async (kelasId: string): Promise<{ id: string }[]> => {
-    return fetchAPI(`/siswa/kelas/${kelasId}`);
-  },
+  getSiswaByKelas: async (
+    kelasId: string
+  ): Promise<{ id: string; jumlahSpp: number }[]> =>
+    fetchAPI(`/siswa/kelas/${kelasId}`),
 
   createSiswa: async (siswa: CreateSiswaRequest): Promise<Siswa> => {
     return fetchAPI("/siswa", {
@@ -250,6 +254,43 @@ export const api = {
 
   deletePengeluaran: async (id: string): Promise<void> => {
     return fetchAPI(`/keuangan/pengeluaran/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  // kategori
+  getKategori: async (
+    tipe?: "PEMASUKAN" | "PENGELUARAN"
+  ): Promise<Kategori[]> => {
+    const endpoint = tipe ? `/kategori?tipe=${tipe}` : "/kategori";
+    return fetchAPI(endpoint);
+  },
+
+  createKategori: async (data: CreateKategoriRequest): Promise<Kategori> => {
+    return fetchAPI("/kategori", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Memperbarui nama kategori berdasarkan ID.
+   */
+  updateKategori: async (
+    id: string,
+    data: UpdateKategoriRequest
+  ): Promise<Kategori> => {
+    return fetchAPI(`/kategori/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Menghapus kategori berdasarkan ID.
+   */
+  deleteKategori: async (id: string): Promise<void> => {
+    return fetchAPI(`/kategori/${id}`, {
       method: "DELETE",
     });
   },

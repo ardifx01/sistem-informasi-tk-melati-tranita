@@ -24,7 +24,7 @@ export const createSiswaSchema = z.object({
     .string()
     .min(3, { message: "Nama harus memiliki minimal 3 karakter." }),
   nis: z.string().min(1, { message: "NIS tidak boleh kosong." }),
-  jenisKelamin: z.enum(["L", "P"]),
+  jenisKelamin: JenisKelaminEnum,
   tanggalLahir: z.coerce.date(),
   alamat: z
     .string()
@@ -32,6 +32,9 @@ export const createSiswaSchema = z.object({
   telepon: z.string().min(10, { message: "Nomor telepon minimal 10 digit." }),
   orangTua: z.string().min(3, { message: "Nama orang tua harus diisi." }),
   kelasId: z.string().cuid({ message: "Kelas harus dipilih." }),
+  jumlahSpp: z.coerce
+    .number({ required_error: "Tingkat SPP harus dipilih." })
+    .positive("Tingkat SPP harus dipilih."),
 });
 
 export const updateSiswaSchema = createSiswaSchema.partial();
@@ -46,51 +49,54 @@ export const createKelasSchema = z.object({
 
 export const updateKelasSchema = createKelasSchema.partial();
 
-// kategori pemasukan enum validasi
-const KategoriPemasukanEnum = z.enum(
-  ["UANG_SEKOLAH", "UANG_PENDAFTARAN", "LAINNYA"],
-  {
-    required_error: "Kategori pemasukan harus dipilih.",
-  }
-);
-
 //pemasukan schema
 export const createPemasukanSchema = z.object({
   jumlah: z.coerce.number().positive("Jumlah harus lebih dari 0"),
   keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
-  kategori: z.enum(["UANG_SEKOLAH", "UANG_PENDAFTARAN", "LAINNYA"]),
+  kategori: z.string({ required_error: "Kategori harus dipilih." }),
   tagihanId: z.string().cuid({ message: "Tagihan ID tidak valid." }),
 });
 
 export const updatePemasukanSchema = createPemasukanSchema.partial();
 
-// kategori pengeluaran enum validasi
-const KategoriPengeluaranEnum = z.enum(
-  [
-    "ATK",
-    "OPERASIONAL",
-    "GAJI_GURU",
-    "KEGIATAN_SISWA",
-    "PERAWATAN_ASET",
-    "LAINNYA",
-  ],
-  {
-    required_error: "Kategori pengeluaran harus dipilih.",
-  }
-);
-
 // pengeluaran schema
 export const createPengeluaranSchema = z.object({
-  tanggal: z.date({ required_error: "Tanggal pengeluaran harus diisi." }),
-  jumlah: z
+  tanggal: z.coerce.date({
+    required_error: "Tanggal pengeluaran harus diisi.",
+  }),
+  jumlah: z.coerce
     .number({ required_error: "Jumlah tidak boleh kosong." })
     .int()
     .positive({ message: "Jumlah harus angka positif." }),
   keterangan: z.string().min(3, { message: "Keterangan minimal 3 karakter." }),
-  kategori: KategoriPengeluaranEnum,
+  kategori: z.string({ required_error: "Kategori harus dipilih." }),
 });
 
 export const updatePengeluaranSchema = createPengeluaranSchema.partial();
+
+export const createTagihanSchema = z.object({
+  kelasId: z.string({ required_error: "Pilihan kelas harus diisi." }),
+  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
+  tanggalJatuhTempo: z.coerce.date({
+    required_error: "Tanggal jatuh tempo harus diisi.",
+  }),
+});
+
+export const updateTagihanSchema = createTagihanSchema.partial();
+
+//kategori
+export const createKategoriSchema = z.object({
+  nama: z
+    .string()
+    .min(3, { message: "Nama kategori harus memiliki minimal 3 karakter." }),
+  tipe: z
+    .string()
+    .nonempty({ message: "Tipe kategori harus dipilih." })
+    .pipe(z.enum(["PEMASUKAN", "PENGELUARAN"])),
+});
+
+// Skema untuk memperbarui kategori (hanya nama yang bisa diubah)
+export const updateKategoriSchema = createKategoriSchema.partial();
 
 // Export types
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -107,3 +113,9 @@ export type UpdatePemasukanInput = z.infer<typeof updatePemasukanSchema>;
 
 export type PengeluaranInput = z.infer<typeof createPengeluaranSchema>;
 export type UpdatePengeluaranInput = z.infer<typeof updatePengeluaranSchema>;
+
+export type TagihanInput = z.infer<typeof createTagihanSchema>;
+export type UpdateTagihanInput = z.infer<typeof updateTagihanSchema>;
+
+export type KategoriInput = z.infer<typeof createKategoriSchema>;
+export type UpdateKategoriInput = z.infer<typeof updateKategoriSchema>;
