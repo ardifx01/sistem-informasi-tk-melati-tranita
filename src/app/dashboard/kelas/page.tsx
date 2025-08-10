@@ -1,7 +1,7 @@
 "use client";
 
-import { AddKelasDialog } from "@/components/Kelas/AddKelasDialog";
-import { KelasTable } from "@/components/Kelas/KelasTable";
+import { AddKelasDialog } from "@/components/Dashboard/Kelas/AddKelasDialog";
+import { KelasTable } from "@/components/Dashboard/Kelas/KelasTable";
 import {
   Card,
   CardContent,
@@ -24,6 +24,7 @@ import {
 import useSWR from "swr";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lightbulb } from "lucide-react";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 const fetcher = (url: string) => api.getKelas();
 
@@ -37,7 +38,10 @@ function KelasPageSkeleton() {
             Kelola data kelas dan wali kelas.
           </p>
         </div>
-        <Skeleton className="h-10 w-40 rounded-md" />
+        <div className="flex items-center gap-4">
+          <RefreshButton mutateKeys="api/kelas" />
+          <Skeleton className="h-10 w-40 rounded-md" />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
@@ -114,7 +118,10 @@ export default function KelasPage() {
             Kelola data kelas dan wali kelas.
           </p>
         </div>
-        <AddKelasDialog />
+        <div className="flex items-center gap-4">
+          <RefreshButton mutateKeys="api/kelas" />
+          <AddKelasDialog />
+        </div>
       </div>
 
       <Alert variant="info">

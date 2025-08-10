@@ -1,13 +1,14 @@
 "use client";
 
-import { StatCard } from "@/components/Dashboard/StatCard";
-import { TrenKeuangan } from "@/components/Keuangan/Dashboard/TrenKeuangan";
-import { RecentTransactions } from "@/components/Keuangan/Dashboard/RecentTransactions";
+import { StatCard } from "@/components/Dashboard/Utama/StatCard";
+import { TrenKeuangan } from "@/components/Dashboard/Keuangan/Dashboard/TrenKeuangan";
+import { RecentTransactions } from "@/components/Dashboard/Keuangan/Dashboard/RecentTransactions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Wallet, BanknoteArrowUp, UserX } from "lucide-react";
 import { api } from "@/lib/api";
 import type { DashboardStats } from "@/lib/types";
 import useSWR from "swr";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 // Komponen Skeleton untuk tampilan loading
 function DashboardSkeleton() {
@@ -59,11 +60,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Utama</h1>
-        <p className="text-muted-foreground">
-          Ringkasan umum data siswa, kelas dan keuangan sekolah.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Utama</h1>
+          <p className="text-muted-foreground">
+            Ringkasan umum data siswa, kelas dan keuangan sekolah.
+          </p>
+        </div>
+        <RefreshButton mutateKeys="/api/dashboard/stats" />
       </div>
 
       {/* Kartu Statistik Utama (Paling Penting) */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { PemasukanTable } from "@/components/Keuangan/Pemasukan/PemasukanTable";
+import { PemasukanTable } from "@/components/Dashboard/Keuangan/Pemasukan/PemasukanTable";
 import {
   Card,
   CardContent,
@@ -30,6 +30,7 @@ import {
 } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 const ITEMS_PER_PAGE = 30; // Batas data per halaman
 
@@ -67,7 +68,18 @@ function PemasukanPageSkeleton() {
             Catatan semua transaksi pemasukan yang telah terjadi.
           </p>
         </div>
-        <Skeleton className="h-10 w-40 rounded-md" />
+        <div className="flex items-center gap-4">
+          <RefreshButton
+            mutateKeys={[
+              "/api/kelas",
+              "/api/keuangan/tagihan",
+              "/api/keuangan/pemasukan",
+              "/api/siswa",
+              "/api/kelas",
+            ]}
+          />
+          <Skeleton className="h-10 w-40 rounded-md" />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
@@ -217,26 +229,37 @@ export default function PemasukanPage() {
             Catatan semua transaksi pemasukan yang telah terjadi.
           </p>
         </div>
-        {/* --- PENGGUNAAN KOMPONEN EKSPOR --- */}
-        <ExportLaporanDialog
-          data={allPemasukan}
-          columns={pemasukanColumns}
-          filename="Laporan Pemasukan"
-          title="Laporan Pemasukan"
-        >
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Unduh Laporan
-          </Button>
-        </ExportLaporanDialog>
+        <div className="flex items-center gap-4">
+          <RefreshButton
+            mutateKeys={[
+              "/api/kelas",
+              "/api/keuangan/tagihan",
+              "/api/keuangan/pemasukan",
+              "/api/siswa",
+              "/api/kelas",
+            ]}
+          />
+          <ExportLaporanDialog
+            data={allPemasukan}
+            columns={pemasukanColumns}
+            filename="Laporan Pemasukan"
+            title="Laporan Pemasukan"
+          >
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Unduh Laporan
+            </Button>
+          </ExportLaporanDialog>
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
-        <AlertTitle>Halaman Riwayat</AlertTitle>
+        <AlertTitle>Informasi</AlertTitle>
         <AlertDescription>
           Halaman ini menampilkan semua pemasukan yang sudah tercatat. Untuk
           mencatat pemasukan baru, Anda harus melakukannya dengan{" "}
-          <b>membayar tagihan</b> melalui halaman <b>Manajemen Tagihan</b>.
+          <b>membuat tagihan</b> dan <b>membayar tagihan</b> tersebut melalui
+          halaman <b>Manajemen Tagihan</b>.
         </AlertDescription>
       </Alert>
       <Card>
