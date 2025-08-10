@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { AddPengeluaranDialog } from "@/components/Keuangan/Pengeluaran/AddPengeluaranDialog";
-import { PengeluaranTable } from "@/components/Keuangan/Pengeluaran/PengeluaranTable";
+import { AddPengeluaranDialog } from "@/components/Dashboard/Keuangan/Pengeluaran/AddPengeluaranDialog";
+import { PengeluaranTable } from "@/components/Dashboard/Keuangan/Pengeluaran/PengeluaranTable";
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
-import type { Pengeluaran, KategoriPengeluaran } from "@/lib/types";
+import type { Kategori, Pengeluaran } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
 import { Download, Lightbulb, RotateCcw } from "lucide-react";
 import {
@@ -30,18 +30,10 @@ import {
 } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
+import { toast } from "sonner";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 const ITEMS_PER_PAGE = 30;
-
-// Opsi untuk filter kategori
-const kategoriOptions: { value: KategoriPengeluaran; label: string }[] = [
-  { value: "OPERASIONAL", label: "Operasional" },
-  { value: "PERAWATAN_ASET", label: "Perawatan Aset" },
-  { value: "KEGIATAN_SISWA", label: "Kegiatan Siswa" },
-  { value: "ATK", label: "Alat Tulis Kantor" },
-  { value: "GAJI_GURU", label: "Gaji Guru" },
-  { value: "LAINNYA", label: "Lainnya" },
-];
 
 const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
   {
@@ -55,6 +47,7 @@ const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
 ];
 
 const pengeluaranFetcher = (url: string) => api.getPengeluaran();
+const kategoriFetcher = (url: string) => api.getKategori("PENGELUARAN");
 
 function PengeluaranPageSkeleton() {
   return (
@@ -68,7 +61,16 @@ function PengeluaranPageSkeleton() {
             Catat semua biaya operasional dan pengeluaran sekolah.
           </p>
         </div>
-        <Skeleton className="h-10 w-40 rounded-md" />
+        <div className="flex items-center gap-4">
+          <RefreshButton
+            mutateKeys={[
+              "/api/keuangan/pengeluaran",
+              "api/pengaturan/kategori",
+            ]}
+          />
+          <Skeleton className="h-10 w-40 rounded-md" />
+          <Skeleton className="h-10 w-48 rounded-md" />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
@@ -101,6 +103,10 @@ export default function PengeluaranPage() {
     error: pengeluaranError,
     isLoading: isPengeluaranLoading,
   } = useSWR<Pengeluaran[]>("/api/keuangan/pengeluaran", pengeluaranFetcher);
+
+  const { data: kategoriPengeluaran, error: kategoriError } = useSWR<
+    Kategori[]
+  >("/api/kategori?tipe=PENGELUARAN", kategoriFetcher);
 
   // State untuk filter
   const [selectedBulan, setSelectedBulan] = useState<string>("all");
@@ -188,6 +194,12 @@ export default function PengeluaranPage() {
     setCurrentPage(1);
   }, [selectedBulan, selectedKategori]);
 
+  useEffect(() => {
+    if (kategoriError) {
+      toast.error("Gagal memuat kategori pemasukan.");
+    }
+  }, [kategoriError]);
+
   if (isPengeluaranLoading) {
     return <PengeluaranPageSkeleton />;
   }
@@ -208,6 +220,12 @@ export default function PengeluaranPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 justify-center">
+          <RefreshButton
+            mutateKeys={[
+              "/api/keuangan/pengeluaran",
+              "api/pengaturan/kategori",
+            ]}
+          />
           <ExportLaporanDialog
             data={allPengeluaran}
             columns={pengeluaranColumns}
@@ -261,9 +279,9 @@ export default function PengeluaranPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Kategori</SelectItem>
-                {kategoriOptions.map((kategori) => (
-                  <SelectItem key={kategori.value} value={kategori.value}>
-                    {kategori.label}
+                {kategoriPengeluaran?.map((kategori) => (
+                  <SelectItem key={kategori.id} value={kategori.nama}>
+                    {kategori.nama}
                   </SelectItem>
                 ))}
               </SelectContent>
