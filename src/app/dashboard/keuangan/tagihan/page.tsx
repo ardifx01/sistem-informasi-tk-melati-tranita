@@ -76,6 +76,7 @@ function TagihanPageSkeleton() {
           <Skeleton className="h-7 w-40" />
           <Skeleton className="mt-2 h-4 w-48" />
           <div className="flex items-center gap-4 pt-4">
+            <Skeleton className="h-10 w-56 rounded-md" />
             <Skeleton className="h-10 w-40 rounded-md" />
             <Skeleton className="h-10 w-40 rounded-md" />
             <Skeleton className="h-10 w-40 rounded-md" />
