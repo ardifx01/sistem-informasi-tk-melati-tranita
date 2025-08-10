@@ -74,6 +74,17 @@ export const createPengeluaranSchema = z.object({
 
 export const updatePengeluaranSchema = createPengeluaranSchema.partial();
 
+//single tagihan
+export const createSingleTagihanSchema = z.object({
+  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
+  jumlahTagihan: z.coerce.number().positive("Jumlah harus angka positif."),
+  tanggalJatuhTempo: z.date({
+    required_error: "Tanggal jatuh tempo harus diisi.",
+  }),
+  siswaId: z.string().cuid(),
+});
+
+//tagihan
 export const createTagihanSchema = z.object({
   kelasId: z.string({ required_error: "Pilihan kelas harus diisi." }),
   keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
