@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { AddTagihanDialog } from "@/components/Keuangan/Tagihan/AddTagihanDialog";
-import { TagihanTable } from "@/components/Keuangan/Tagihan/TagihanTable";
+import { AddTagihanDialog } from "@/components/Dashboard/Keuangan/Tagihan/AddTagihanDialog";
+import { TagihanTable } from "@/components/Dashboard/Keuangan/Tagihan/TagihanTable";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { getMonth, getYear } from "date-fns";
 import { Lightbulb, RotateCcw, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import useSWR from "swr";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 
 const ITEMS_PER_PAGE = 30; // Menetapkan batas data per halaman
 
@@ -44,7 +46,18 @@ function TagihanPageSkeleton() {
             Buat tagihan baru dan pantau status pembayaran siswa.
           </p>
         </div>
-        <Skeleton className="h-10 w-40 rounded-md" />
+        <div className="flex items-center gap-4">
+          <RefreshButton
+            mutateKeys={[
+              "/api/kelas",
+              "/api/keuangan/tagihan",
+              "/api/keuangan/pemasukan",
+              "/api/siswa",
+              "/api/kelas",
+            ]}
+          />
+          <Skeleton className="h-10 w-40 rounded-md" />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
@@ -125,9 +138,12 @@ export default function TagihanPage() {
 
     let filteredData = allTagihan;
     if (selectedStatus !== "all") {
-      filteredData = filteredData.filter(
-        (tagihan) => tagihan.status === selectedStatus
-      );
+      if (selectedStatus === "LUNAS") {
+        filteredData = filteredData.filter((t) => t.status === "LUNAS");
+      } else if (selectedStatus === "BELUM_LUNAS") {
+        // Menampilkan semua yang belum lunas (termasuk yang terlambat)
+        filteredData = filteredData.filter((t) => t.status === "BELUM_LUNAS");
+      }
     }
     if (selectedKelas !== "all") {
       filteredData = filteredData.filter(
@@ -208,15 +224,19 @@ export default function TagihanPage() {
             Buat tagihan baru dan pantau status pembayaran siswa.
           </p>
         </div>
-        <AddTagihanDialog />
+        <div className="flex items-center gap-4">
+          <RefreshButton mutateKeys={["/api/kelas", "/api/keuangan/tagihan"]} />
+          <AddTagihanDialog />
+        </div>
       </div>
       <Alert variant="info">
         <Lightbulb className="h-4 w-4" />
         <AlertTitle>Alur Kerja Pembayaran</AlertTitle>
         <AlertDescription>
-          Ini adalah pusat manajemen pembayaran. <b>Buat tagihan</b> untuk siswa
-          terlebih dahulu, kemudian <b>bayar tagihan</b> tersebut dari menu aksi
-          di tabel. Pembayaran yang berhasil akan otomatis tercatat di halaman{" "}
+          Ini adalah pusat manajemen pembayaran. <b>Buat tagihan</b> di awal
+          bulan untuk mencatat kewajiban membayar SPP siswa terlebih dahulu,
+          kemudian <b>bayar tagihan</b> tersebut dari menu aksi di tabel.
+          Setelah pembayaran berhasil, data akan otomatis tercatat di halaman{" "}
           <b>Riwayat Pemasukan</b>.
         </AlertDescription>
       </Alert>
@@ -225,8 +245,12 @@ export default function TagihanPage() {
         <CardHeader>
           <CardTitle>Daftar Tagihan</CardTitle>
           <CardDescription>
-            Menampilkan <strong>{filteredTagihan.length}</strong> dari{" "}
-            <strong> {allTagihan?.length || 0}</strong> total tagihan.
+            <div>
+              <p>
+                Menampilkan <strong>{filteredTagihan.length}</strong> dari{" "}
+                <strong>{allTagihan?.length || 0}</strong> total tagihan.
+              </p>
+            </div>
           </CardDescription>
           <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
             <div className="relative w-full sm:max-w-xs">
@@ -270,11 +294,10 @@ export default function TagihanPage() {
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
-              <SelectContent className="max-h-48">
+              <SelectContent>
                 <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="BELUM_LUNAS">Belum Lunas</SelectItem>
                 <SelectItem value="LUNAS">Lunas</SelectItem>
-                <SelectItem value="TERLAMBAT">Terlambat</SelectItem>
+                <SelectItem value="BELUM_LUNAS">Belum Lunas</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -295,6 +318,23 @@ export default function TagihanPage() {
             onPageChange={handlePageChange}
           />
         </CardContent>
+        <CardFooter>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="font-semibold">Keterangan:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+              <span>Lunas</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-yellow-500"></span>
+              <span>Belum Lunas</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-red-500"></span>
+              <span>Terlambat</span>
+            </div>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );
