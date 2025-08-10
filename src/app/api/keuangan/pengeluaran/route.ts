@@ -1,20 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { z } from "zod";
-
-const createPengeluaranSchema = z.object({
-  tanggal: z.coerce.date(),
-  jumlah: z.number().int().positive(),
-  keterangan: z.string().min(3),
-  kategori: z.enum([
-    "ATK",
-    "OPERASIONAL",
-    "GAJI_GURU",
-    "KEGIATAN_SISWA",
-    "PERAWATAN_ASET",
-    "LAINNYA",
-  ]),
-});
+import { createPengeluaranSchema } from "@/lib/validation";
 
 export async function GET() {
   try {

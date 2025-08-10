@@ -3,14 +3,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-
-// Skema validasi untuk membuat pemasukan baru
-const createPemasukanSchema = z.object({
-  jumlah: z.coerce.number().positive("Jumlah harus lebih dari 0"),
-  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
-  kategori: z.enum(["UANG_SEKOLAH", "UANG_PENDAFTARAN", "LAINNYA"]),
-  tagihanId: z.string().cuid({ message: "Tagihan ID tidak valid." }),
-});
+import { createPemasukanSchema } from "@/lib/validation";
 
 export async function GET() {
   try {
@@ -60,8 +53,10 @@ export async function POST(request: Request) {
 
     const { tagihanId, ...pemasukanData } = validation.data;
 
+    // 1. Cek tagihan secara menyeluruh, termasuk relasi pemasukan
     const tagihanToPay = await prisma.tagihan.findUnique({
       where: { id: tagihanId },
+      include: { pemasukan: true }, // Sertakan data pemasukan yang ada
     });
 
     if (!tagihanToPay) {
@@ -70,9 +65,10 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
-    if (tagihanToPay.status === "LUNAS") {
+    // Cek apakah sudah ada pemasukan yang terhubung
+    if (tagihanToPay.pemasukan) {
       return NextResponse.json(
-        { error: "Tagihan ini sudah lunas." },
+        { error: "Tagihan ini sudah memiliki catatan pembayaran." },
         { status: 400 }
       );
     }
