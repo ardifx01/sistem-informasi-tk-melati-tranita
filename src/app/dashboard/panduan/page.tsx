@@ -16,14 +16,12 @@ import {
 } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  CreditCard,
   DollarSign,
-  HandCoins,
   Users,
-  School,
   FileText,
   Workflow,
   Lightbulb,
+  Tags,
 } from "lucide-react";
 
 // Data untuk item panduan di dalam accordion
@@ -36,13 +34,13 @@ const panduanItems = [
       {
         subtitle: "Membuat Tagihan Bulanan (SPP)",
         description:
-          "Fitur ini digunakan untuk membuat tagihan SPP secara massal untuk satu atau semua kelas sekaligus.",
+          "Fitur ini digunakan untuk membuat tagihan SPP secara massal. Jumlah tagihan akan diambil secara otomatis dari tingkat SPP masing-masing siswa.",
         steps: [
           "Buka menu Keuangan > Tagihan.",
           "Klik tombol 'Buat Tagihan'.",
           "Pilih target: 'Semua Kelas' atau kelas spesifik.",
-          "Isi keterangan (contoh: SPP Oktober 2025), jumlah, dan tanggal jatuh tempo.",
-          "Klik 'Buat Tagihan' untuk men-generate tagihan secara otomatis untuk semua siswa yang dipilih.",
+          "Isi keterangan (contoh: SPP Oktober 2025) dan tanggal jatuh tempo.",
+          "Klik 'Buat Tagihan'. Sistem akan otomatis membuat tagihan dengan nominal yang sesuai untuk setiap siswa.",
         ],
       },
       {
@@ -53,7 +51,7 @@ const panduanItems = [
           "Buka menu Keuangan > Tagihan.",
           "Cari tagihan siswa yang berstatus 'Belum Lunas' atau 'Terlambat'.",
           "Klik ikon titik tiga (...) di ujung kanan baris, lalu pilih 'Bayar Tagihan'.",
-          "Konfirmasi detail pembayaran, lalu klik 'Konfirmasi Pembayaran'. Status tagihan akan otomatis berubah menjadi 'Lunas'.",
+          "Pilih kategori pembayaran (misal: Uang Sekolah), konfirmasi detail lainnya, lalu klik 'Konfirmasi Pembayaran'. Status tagihan akan otomatis berubah menjadi 'Lunas'.",
         ],
       },
       {
@@ -79,9 +77,9 @@ const panduanItems = [
           "Halaman ini adalah pusat data untuk semua siswa yang terdaftar.",
         steps: [
           "Buka menu Manajemen > Siswa.",
-          "Gunakan tombol 'Tambah Siswa' untuk mendaftarkan siswa baru. Tagihan SPP pertama akan dibuat secara otomatis.",
-          "Gunakan filter dan pencarian untuk menemukan siswa dengan cepat.",
-          "Klik ikon titik tiga (...) untuk 'Lihat Detail', 'Edit', atau 'Hapus' data siswa.",
+          "Klik 'Tambah Siswa' untuk mendaftarkan siswa baru. Pastikan untuk memilih Tingkat SPP yang sesuai.",
+          "Tagihan SPP pertama untuk bulan berjalan akan dibuat secara otomatis saat siswa baru ditambahkan.",
+          "Gunakan menu aksi (...) untuk 'Lihat Detail', 'Edit', atau 'Hapus' data siswa.",
         ],
       },
       {
@@ -90,7 +88,6 @@ const panduanItems = [
         steps: [
           "Buka menu Manajemen > Kelas.",
           "Klik 'Tambah Kelas' untuk membuat kelas baru (contoh: A, B1).",
-          "Jumlah siswa di setiap kelas akan dihitung secara otomatis.",
           "Anda tidak dapat menghapus kelas jika masih ada siswa yang terdaftar di dalamnya.",
         ],
       },
@@ -98,6 +95,25 @@ const panduanItems = [
   },
   {
     value: "item-3",
+    title: "Manajemen Kategori",
+    icon: Tags,
+    content: [
+      {
+        subtitle: "Menambah & Mengelola Kategori",
+        description:
+          "Fitur ini memungkinkan Anda untuk menyesuaikan kategori pemasukan dan pengeluaran sesuai kebutuhan sekolah.",
+        steps: [
+          "Buka menu Pengaturan > Kategori.",
+          "Klik 'Tambah Kategori' untuk membuat kategori baru.",
+          "Isi nama kategori (contoh: 'Uang Seragam' atau 'Biaya Listrik').",
+          "Pilih tipe kategori: 'Pemasukan' atau 'Pengeluaran'.",
+          "Kategori yang Anda buat di sini akan otomatis muncul di formulir-formulir terkait.",
+        ],
+      },
+    ],
+  },
+  {
+    value: "item-4",
     title: "Laporan & Ekspor",
     icon: FileText,
     content: [
