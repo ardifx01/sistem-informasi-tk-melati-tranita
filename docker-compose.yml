@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  # Layanan untuk database PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: tk_melati_tranita_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: db_sekolah
+    volumes:
+      # Ini akan menyimpan data database secara permanen di komputer klien
+      # di dalam folder bernama 'postgres-data'
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      # Memetakan port 5432 agar bisa diakses dari luar jika perlu (opsional)
+      - "5432:5432"
+
+  # Layanan untuk aplikasi Next.js Anda
+  app:
+    build: . # Menggunakan Dockerfile di folder ini
+    container_name: tk_melati_tranita_app
+    restart: always
+    ports:
+      # Memetakan port 3000 agar bisa diakses dari browser
+      - "3000:3000"
+    environment:
+      # PENTING: Ini adalah URL koneksi database untuk aplikasi Anda.
+      # Perhatikan host-nya adalah 'db', yaitu nama layanan database di atas.
+      DATABASE_URL: "postgresql://admin:admin123@db:5432/db_sekolah?schema=public"
+    depends_on:
+      - db # Memastikan database berjalan terlebih dahulu sebelum aplikasi

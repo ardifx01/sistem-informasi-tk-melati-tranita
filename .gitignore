@@ -62,7 +62,8 @@ coverage/
 tmp/
 temp/
 
-# --- PRISMA  ---
+# Folder data database yang dibuat oleh Docker
+postgres-data/
 
 # Abaikan file database SQLite
 /prisma/*.db
