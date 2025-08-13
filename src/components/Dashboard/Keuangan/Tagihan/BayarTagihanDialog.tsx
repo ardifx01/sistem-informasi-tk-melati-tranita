@@ -57,10 +57,11 @@ export function BayarTagihanDialog({
   onOpenChange,
   onPembayaranSuccess,
 }: BayarTagihanDialogProps) {
-  const { data: kategoriPemasukan, error: kategoriError } = useSWR(
-    open ? "/api/kategori?tipe=PEMASUKAN" : null,
-    kategoriFetcher
-  );
+  const {
+    data: kategoriPemasukan,
+    error: kategoriError,
+    isLoading: isKategoriLoading,
+  } = useSWR(open ? "/api/kategori?tipe=PEMASUKAN" : null, kategoriFetcher);
 
   const form = useForm<PemasukanFormValues>({
     resolver: zodResolver(createPemasukanSchema),
@@ -129,7 +130,6 @@ export function BayarTagihanDialog({
                 Rp {tagihan.jumlahTagihan.toLocaleString("id-ID")}
               </p>
             </div>
-
             <FormField
               control={form.control}
               name="jumlah"
@@ -147,7 +147,6 @@ export function BayarTagihanDialog({
                 </FormItem>
               )}
             />
-            {/* --- DROPDOWN KATEGORI BARU --- */}
             <FormField
               control={form.control}
               name="kategori"
@@ -161,17 +160,23 @@ export function BayarTagihanDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(kategoriPemasukan || []).map((kategori) => (
-                        <SelectItem key={kategori.id} value={kategori.nama}>
-                          {kategori.nama}
+                      {isKategoriLoading ? (
+                        <SelectItem value="isKategoriLoading" disabled>
+                          Memuat kategori...
                         </SelectItem>
-                      ))}
+                      ) : (
+                        (kategoriPemasukan || []).map((kategori) => (
+                          <SelectItem key={kategori.id} value={kategori.nama}>
+                            {kategori.nama}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            />{" "}
             <FormField
               control={form.control}
               name="keterangan"
@@ -188,7 +193,6 @@ export function BayarTagihanDialog({
                 </FormItem>
               )}
             />
-
             <DialogFooter>
               <Button
                 type="button"

@@ -61,10 +61,11 @@ export function AddPengeluaranDialog({
 }: AddPengeluaranDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const { data: kategoriPengeluaran, error: kategoriError } = useSWR(
-    open ? "/api/kategori?tipe=PENGELUARAN" : null,
-    kategoriFetcher
-  );
+  const {
+    data: kategoriPengeluaran,
+    error: kategoriError,
+    isLoading: isKategoriLoading,
+  } = useSWR(open ? "/api/kategori?tipe=PENGELUARAN" : null, kategoriFetcher);
 
   const form = useForm<PengeluaranFormValues>({
     resolver: zodResolver(createPengeluaranSchema),
@@ -194,11 +195,17 @@ export function AddPengeluaranDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(kategoriPengeluaran || []).map((kategori) => (
-                        <SelectItem key={kategori.id} value={kategori.nama}>
-                          {kategori.nama}
+                      {isKategoriLoading ? (
+                        <SelectItem value="isKategoriLoading" disabled>
+                          Memuat kategori...
                         </SelectItem>
-                      ))}
+                      ) : (
+                        (kategoriPengeluaran || []).map((kategori) => (
+                          <SelectItem key={kategori.id} value={kategori.nama}>
+                            {kategori.nama}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>{" "}
                   </Select>
                   <FormMessage />

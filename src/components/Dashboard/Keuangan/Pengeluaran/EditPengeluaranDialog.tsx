@@ -66,10 +66,11 @@ export function EditPengeluaranDialog({
   onPengeluaranUpdated,
 }: EditPengeluaranDialogProps) {
   const { cache, mutate } = useSWRConfig(); // Hook SWR untuk interaksi cache
-  const { data: kategoriPengeluaran, error: kategoriError } = useSWR(
-    open ? "/api/kategori?tipe=PENGELUARAN" : null,
-    kategoriFetcher
-  );
+  const {
+    data: kategoriPengeluaran,
+    error: kategoriError,
+    isLoading: isKategoriLoading,
+  } = useSWR(open ? "/api/kategori?tipe=PENGELUARAN" : null, kategoriFetcher);
 
   const form = useForm<PengeluaranFormValues>({
     resolver: zodResolver(updatePengeluaranSchema),
@@ -223,11 +224,17 @@ export function EditPengeluaranDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(kategoriPengeluaran || []).map((kategori) => (
-                        <SelectItem key={kategori.id} value={kategori.nama}>
-                          {kategori.nama}
+                      {isKategoriLoading ? (
+                        <SelectItem value="isKategoriLoading" disabled>
+                          Memuat kategori...
                         </SelectItem>
-                      ))}
+                      ) : (
+                        (kategoriPengeluaran || []).map((kategori) => (
+                          <SelectItem key={kategori.id} value={kategori.nama}>
+                            {kategori.nama}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>{" "}
                   </Select>
                   <FormMessage />
