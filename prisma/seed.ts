@@ -393,7 +393,7 @@ async function main() {
       tanggal: new Date(),
       jumlah: 50000,
       keterangan: "Pembelian spidol dan kertas A4",
-      kategori: "ATK",
+      kategori: "Alat Tulis Kantor",
     },
   });
 
@@ -402,7 +402,7 @@ async function main() {
       tanggal: new Date(),
       jumlah: 200000,
       keterangan: "Pembayaran tagihan listrik bulan Juni",
-      kategori: "OPERASIONAL",
+      kategori: "Operasional",
     },
   });
   console.log("Data pengeluaran berhasil dibuat.");
