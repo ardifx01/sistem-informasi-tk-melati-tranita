@@ -23,9 +23,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../../ui/accordion";
+} from "@/components/ui/accordion";
 
-// Definisi tipe data (tidak berubah)
+// Definisi tipe data
 interface LabelItem {
   type: "label";
   name: string;
@@ -113,13 +113,14 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
-// Komponen Sidebar
-export function SidebarContent() {
+interface SidebarContentProps {
+  onLinkClick?: () => void;
+}
+
+export function SidebarContent({ onLinkClick }: SidebarContentProps) {
   const pathname = usePathname();
-  // State untuk mengontrol item accordion yang sedang terbuka
   const [openAccordion, setOpenAccordion] = useState("");
 
-  // Efek untuk menentukan item mana yang harus terbuka secara default berdasarkan URL
   useEffect(() => {
     for (const item of navigationItems) {
       if (
@@ -136,7 +137,11 @@ export function SidebarContent() {
     <div className="flex h-full flex-col bg-background">
       {/* Header Sidebar */}
       <div className="flex h-16 shrink-0 items-center border-b px-6">
-        <Link href="/" className="flex items-center gap-3">
+        <Link
+          href="/"
+          onClick={onLinkClick}
+          className="flex items-center gap-3"
+        >
           <img src="/icons/favicon/favicon-32x32.png" alt="Logo Sekolah" />
           <span className="text-base font-bold text-foreground">
             TK Melati Tranita
@@ -144,8 +149,7 @@ export function SidebarContent() {
         </Link>
       </div>
 
-      {/* Konten Navigasi (Scrollable) */}
-      {/* Kelas overflow-y-auto akan membuat area ini bisa di-scroll jika kontennya melebihi tinggi layar */}
+      {/* Konten Navigasi */}
       <div className="flex flex-1 flex-col gap-y-5 overflow-y-auto px-4 py-4">
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -170,7 +174,6 @@ export function SidebarContent() {
                     );
                     return (
                       <li key={item.name}>
-                        {/* Semua Accordion dikontrol oleh state 'openAccordion' */}
                         <Accordion
                           type="single"
                           collapsible
@@ -204,6 +207,7 @@ export function SidebarContent() {
                                     <li key={subItem.name}>
                                       <Link
                                         href={subItem.href}
+                                        onClick={onLinkClick}
                                         className={cn(
                                           "group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 hover:bg-muted",
                                           isActive
@@ -234,6 +238,7 @@ export function SidebarContent() {
                     <li key={item.name}>
                       <Link
                         href={item.href}
+                        onClick={onLinkClick}
                         className={cn(
                           "group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 hover:bg-muted",
                           isActive
@@ -250,7 +255,7 @@ export function SidebarContent() {
               </ul>
             </li>
 
-            {/* Navigasi Bantuan (didorong ke bawah) */}
+            {/* Navigasi Bantuan */}
             <li className="mt-auto">
               <div className="px-3 pt-4 pb-1">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -261,6 +266,7 @@ export function SidebarContent() {
                 <li>
                   <Link
                     href="/dashboard/panduan"
+                    onClick={onLinkClick}
                     className={cn(
                       "group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 hover:bg-muted",
                       pathname === "/dashboard/panduan"

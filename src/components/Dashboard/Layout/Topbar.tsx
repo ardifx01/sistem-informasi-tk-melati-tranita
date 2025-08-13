@@ -16,13 +16,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SidebarContent } from "./Sidebar";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { api } from "@/lib/api";
 import type { Siswa } from "@/lib/types";
 import useSWR from "swr";
-import { useAuth } from "@/lib/contexts/AuthContext";
+import { SidebarContent } from "./Sidebar";
 
-// --- KOMPONEN BREADCRUMB BARU ---
+// --- (Komponen Breadcrumbs dan SearchResults tidak berubah) ---
 // Fetcher khusus untuk mengambil data siswa berdasarkan ID
 const siswaFetcher = (url: string) => api.getSiswaById(url.split("/").pop()!);
 
@@ -31,20 +31,17 @@ function Breadcrumbs() {
   const params = useParams();
   const segments = pathname.split("/").filter(Boolean);
 
-  // Cek apakah kita berada di halaman detail siswa
   const isSiswaDetailPage =
     segments[0] === "dashboard" &&
     segments[1] === "siswa" &&
     segments.length === 3;
   const siswaId = isSiswaDetailPage ? (params.id as string) : null;
 
-  // Ambil data siswa hanya jika kita berada di halaman detail
   const { data: siswa, isLoading } = useSWR<Siswa>(
-    siswaId ? `/api/siswa/${siswaId}` : null, // Kunci SWR akan null jika tidak di halaman detail
+    siswaId ? `/api/siswa/${siswaId}` : null,
     siswaFetcher
   );
 
-  // Jangan tampilkan breadcrumb di halaman dashboard utama
   if (segments.length <= 1) {
     return <div className="hidden flex-1 md:flex" />;
   }
@@ -68,14 +65,13 @@ function Breadcrumbs() {
             .replace(/-/g, " ")
             .replace(/\b\w/g, (l) => l.toUpperCase());
 
-          // Logika untuk mengganti ID dengan nama siswa
           if (isSiswaDetailPage && isLast) {
             if (isLoading) {
-              name = "..."; // Tampilan saat loading
+              name = "...";
             } else if (siswa) {
-              name = siswa.nama; // Gunakan nama siswa jika sudah ada
+              name = siswa.nama;
             } else {
-              name = "Detail Siswa"; // Fallback
+              name = "Detail Siswa";
             }
           }
 
@@ -107,7 +103,6 @@ function Breadcrumbs() {
   );
 }
 
-// Komponen untuk menampilkan hasil pencarian
 function SearchResults({
   results,
   onSelect,
@@ -152,6 +147,12 @@ export function Topbar() {
   const [isSearching, setIsSearching] = useState(false);
   const [isResultsVisible, setIsResultsVisible] = useState(false);
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   useEffect(() => {
     if (searchTerm.length < 2) {
       setSearchResults([]);
@@ -185,15 +186,18 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      {/* Tombol Sidebar Mobile */}
       <div className="lg:hidden">
-        <Sheet>
+        {/* Mengontrol Sheet dengan state */}
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-64">
-            <SidebarContent />
+            {/* Meneruskan fungsi penutup ke SidebarContent */}
+            <SidebarContent onLinkClick={handleLinkClick} />
           </SheetContent>
         </Sheet>
       </div>
