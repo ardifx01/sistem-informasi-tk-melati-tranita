@@ -10,14 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Lightbulb, RotateCcw } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import type { Kategori } from "@/lib/types";
@@ -76,6 +69,7 @@ export default function KategoriPage() {
     error,
     isLoading,
   } = useSWR<Kategori[]>("/api/kategori", kategoriFetcher);
+
   const [filterTipe, setFilterTipe] = useState("all");
 
   const filteredKategori = useMemo(() => {
