@@ -88,7 +88,7 @@ model Pengeluaran {
 model Kategori {
   id    String        @id @default(cuid())
   nama  String        @unique
-  tipe String
+  tipe  String
 }
 
   
