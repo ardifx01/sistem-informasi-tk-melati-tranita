@@ -4,7 +4,7 @@ const nextConfig = {
   // semua file dari folder output Prisma Client ke dalam build akhir.
   experimental: {
     outputFileTracingIncludes: {
-      "/*": ["./src/generated/prisma/client/**/*"],
+      "/*": ["../src/generated/prisma/client/**/*"],
     },
   },
 };
