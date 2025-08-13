@@ -30,3 +30,4 @@ services:
       DATABASE_URL: "postgresql://admin:admin123@db:5432/db_sekolah?schema=public"
     depends_on:
       - db # Memastikan database berjalan terlebih dahulu sebelum aplikasi
+    command: sh -c "npx prisma migrate deploy && npm start"
