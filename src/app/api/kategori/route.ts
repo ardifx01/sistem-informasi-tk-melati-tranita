@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const tipe = searchParams.get("tipe");
 
-  // Buat objek 'where' secara dinamis
+  // Membuat objek 'where' secara dinamis dan aman
   const where: Prisma.KategoriWhereInput = {};
   if (tipe === "PEMASUKAN" || tipe === "PENGELUARAN") {
     where.tipe = tipe;
@@ -15,11 +15,12 @@ export async function GET(request: Request) {
 
   try {
     const kategori = await prisma.kategori.findMany({
-      where,
+      where, // Gunakan objek 'where' yang sudah divalidasi
       orderBy: { nama: "asc" },
     });
     return NextResponse.json(kategori);
   } catch (error) {
+    console.error("API Error - Gagal mengambil kategori:", error);
     return NextResponse.json(
       { error: "Gagal mengambil data kategori." },
       { status: 500 }
