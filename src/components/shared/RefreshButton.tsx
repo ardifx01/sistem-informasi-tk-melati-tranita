@@ -16,7 +16,6 @@ import { useRouter } from "next/navigation";
 
 // Props untuk komponen
 interface RefreshButtonProps extends ButtonProps {
-  // Menerima satu atau lebih kunci SWR untuk di-refresh
   mutateKeys: string | string[];
 }
 
@@ -49,7 +48,6 @@ export function RefreshButton({
   };
 
   return (
-    // 2. Bungkus tombol dengan TooltipProvider dan Tooltip
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -58,16 +56,15 @@ export function RefreshButton({
             size="icon"
             onClick={handleRefresh}
             disabled={isLoading}
-            className={cn("h-9 w-9", className)}
+            className={cn("w-32", className)}
             {...props}
           >
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            <span className="sr-only">Refresh Data</span>
+            <span className="">Refresh</span>
           </Button>
         </TooltipTrigger>
-        {/* 3. Tambahkan konten untuk tooltip */}
         <TooltipContent>
-          <p>Segarkan Data</p>
+          <p>Refresh Halaman </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
