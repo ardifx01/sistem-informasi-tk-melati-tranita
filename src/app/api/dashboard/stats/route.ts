@@ -30,7 +30,6 @@ export async function GET() {
       kategoriPengeluaranStats,
       recentPemasukan,
       recentPengeluaran,
-      // Query baru untuk tunggakan teratas
       tunggakanTeratas,
     ] = await prisma.$transaction([
       prisma.siswa.count(),
@@ -38,11 +37,15 @@ export async function GET() {
       prisma.user.count(),
       prisma.pemasukan.aggregate({ _sum: { jumlah: true } }),
       prisma.pengeluaran.aggregate({ _sum: { jumlah: true } }),
+
+      // Menggunakan groupBy untuk menghitung siswa unik yang belum bayar.
+      // Ini lebih aman secara tipe data di dalam transaksi.
       prisma.tagihan.groupBy({
         by: ["siswaId"],
         where: { status: "BELUM_LUNAS" },
         orderBy: undefined,
       }),
+
       prisma.pemasukan.aggregate({
         _sum: { jumlah: true },
         where: { tanggal: { gte: startOfMonth, lte: endOfMonth } },
@@ -64,7 +67,6 @@ export async function GET() {
         },
       }),
       prisma.pengeluaran.findMany({ take: 5, orderBy: { tanggal: "desc" } }),
-      // Mengambil 5 tagihan terlama yang belum lunas
       prisma.tagihan.findMany({
         where: { status: "BELUM_LUNAS", tanggalJatuhTempo: { lt: new Date() } },
         orderBy: { tanggalJatuhTempo: "asc" },
@@ -92,6 +94,7 @@ export async function GET() {
           (totalPengeluaran._sum.jumlah || 0),
         pemasukanBulanIni: pemasukanBulanIni._sum.jumlah || 0,
         pengeluaranBulanIni: pengeluaranBulanIni._sum.jumlah || 0,
+        // Hasil dari groupBy adalah array, jadi kita ambil panjangnya.
         totalSiswaBelumBayar: siswaBelumBayar.length,
       },
       kategoriPengeluaranDistribution: kategoriPengeluaranStats.map((stat) => ({
