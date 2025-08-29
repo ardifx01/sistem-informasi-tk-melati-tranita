@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { StatCard } from "@/components/Dashboard/Utama/StatCard";
 import { TrenKeuangan } from "@/components/Dashboard/Keuangan/Dashboard/TrenKeuangan";
 import { RecentTransactions } from "@/components/Dashboard/Keuangan/Dashboard/RecentTransactions";
