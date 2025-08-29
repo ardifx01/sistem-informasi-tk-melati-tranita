@@ -106,12 +106,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Grafik Siswa */}
-      {/* <div className="grid gap-4 lg:grid-cols-2">
-        <SiswaChart />
-        <GenderRatioChart />
-      </div> */}
-
       {/* Grafik Tren Keuangan (Gambaran Besar) */}
       <div className="grid grid-cols-1 gap-6">
         <TrenKeuangan />
