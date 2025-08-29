@@ -5,9 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarIcon } from "lucide-react";
+import { useSWRConfig } from "swr";
 import { format } from "date-fns";
 import { id as localeID } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,26 +28,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { api } from "@/lib/api";
-import type { Tagihan } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
-import { useSWRConfig } from "swr";
-
-// Skema validasi Zod untuk update tagihan
-const updateTagihanSchema = z.object({
-  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
-  jumlahTagihan: z.coerce.number().positive("Jumlah harus angka positif."),
-  tanggalJatuhTempo: z.date({
-    required_error: "Tanggal jatuh tempo harus diisi.",
-  }),
-});
+import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import type { Tagihan, Siswa } from "@/lib/types";
+import { updateTagihanSchema } from "@/lib/validation";
 
 type TagihanFormValues = z.infer<typeof updateTagihanSchema>;
 
@@ -54,30 +46,28 @@ interface EditTagihanDialogProps {
   tagihan: Tagihan | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTagihanUpdated?: () => void;
 }
 
 export function EditTagihanDialog({
   tagihan,
   open,
   onOpenChange,
-  onTagihanUpdated,
 }: EditTagihanDialogProps) {
-  const { cache, mutate } = useSWRConfig(); // Hook SWR untuk interaksi cache
+  const { cache, mutate } = useSWRConfig();
 
   const form = useForm<TagihanFormValues>({
     resolver: zodResolver(updateTagihanSchema),
   });
 
   useEffect(() => {
-    if (tagihan) {
+    if (tagihan && open) {
       form.reset({
         keterangan: tagihan.keterangan,
         jumlahTagihan: tagihan.jumlahTagihan,
         tanggalJatuhTempo: new Date(tagihan.tanggalJatuhTempo),
       });
     }
-  }, [tagihan, form]);
+  }, [tagihan, open, form]);
 
   const onSubmit = async (values: TagihanFormValues) => {
     if (!tagihan) return;
@@ -86,50 +76,65 @@ export function EditTagihanDialog({
     const siswaDetailKey = `/api/siswa/${tagihan.siswaId}`;
     const statsKey = "/api/dashboard/stats";
 
-    // 1. Ambil data saat ini dari cache untuk rollback jika gagal
     const previousTagihanList = cache.get(tagihanListKey)?.data as
       | Tagihan[]
       | undefined;
+    const previousSiswaDetail = cache.get(siswaDetailKey)?.data as
+      | Siswa
+      | undefined;
 
-    // 2. Buat data optimis (data baru yang akan ditampilkan di UI)
-    const optimisticData =
-      previousTagihanList?.map((item) =>
-        item.id === tagihan.id
-          ? {
-              ...item,
-              ...values,
-              tanggalJatuhTempo:
-                values.tanggalJatuhTempo || item.tanggalJatuhTempo,
-            }
-          : item
-      ) || [];
+    const optimisticTagihanList = previousTagihanList?.map((t) =>
+      t.id === tagihan.id
+        ? {
+            ...t,
+            ...values,
+            tanggalJatuhTempo: values.tanggalJatuhTempo || new Date(),
+          }
+        : t
+    );
 
-    // 3. Perbarui UI secara instan tanpa memvalidasi ulang
-    mutate(tagihanListKey, optimisticData, false);
-    toast.loading("Menyimpan perubahan...");
-    onOpenChange(false);
+    let optimisticSiswaDetail: Siswa | undefined;
+    if (previousSiswaDetail) {
+      optimisticSiswaDetail = {
+        ...previousSiswaDetail,
+        tagihan: previousSiswaDetail.tagihan?.map((t) =>
+          t.id === tagihan.id
+            ? {
+                ...t,
+                ...values,
+                tanggalJatuhTempo: values.tanggalJatuhTempo || new Date(),
+              }
+            : t
+        ),
+      };
+    }
+
+    if (optimisticTagihanList)
+      mutate(tagihanListKey, optimisticTagihanList, false);
+    if (optimisticSiswaDetail)
+      mutate(siswaDetailKey, optimisticSiswaDetail, false);
+
+    toast.loading("Memperbarui tagihan...");
 
     try {
-      // 4. Kirim permintaan ke API
       await api.updateTagihan(tagihan.id, values);
 
-      // 5. Jika berhasil, ganti notifikasi dan picu validasi ulang untuk semua data terkait
       toast.dismiss();
-      toast.success("Data tagihan berhasil diperbarui!");
-      mutate(tagihanListKey); // Memvalidasi ulang daftar tagihan
-      mutate(siswaDetailKey); // Memvalidasi ulang halaman detail siswa terkait
-      mutate(statsKey); // Memvalidasi ulang statistik di dashboard
+      toast.success("Tagihan berhasil diperbarui!");
 
-      onTagihanUpdated?.();
+      mutate(tagihanListKey);
+      mutate(siswaDetailKey);
+      mutate(statsKey);
+
+      onOpenChange(false);
     } catch (error: any) {
-      // 6. Jika gagal, kembalikan UI ke kondisi semula (rollback) dan tampilkan error
       toast.dismiss();
-      const errorMessage =
-        error.response?.data?.error || "Gagal memperbarui data.";
-      toast.error(errorMessage);
-      if (previousTagihanList) {
+      toast.error("Gagal memperbarui tagihan.");
+
+      if (previousTagihanList)
         mutate(tagihanListKey, previousTagihanList, false);
-      }
+      if (previousSiswaDetail)
+        mutate(siswaDetailKey, previousSiswaDetail, false);
     }
   };
 
@@ -141,7 +146,8 @@ export function EditTagihanDialog({
         <DialogHeader>
           <DialogTitle>Edit Tagihan</DialogTitle>
           <DialogDescription>
-            Perbarui detail tagihan untuk siswa {tagihan.siswa.nama}.
+            Ubah detail tagihan untuk siswa:{" "}
+            <strong>{tagihan.siswa?.nama || "Siswa"}</strong>.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -151,10 +157,10 @@ export function EditTagihanDialog({
               name="keterangan"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Keterangan</FormLabel>
+                  <FormLabel>Keterangan Tagihan</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Contoh: SPP Bulan September 2025"
+                      placeholder="Contoh: SPP Bulan September"
                       {...field}
                     />
                   </FormControl>
@@ -169,16 +175,11 @@ export function EditTagihanDialog({
                 <FormItem>
                   <FormLabel>Jumlah Tagihan (Rp)</FormLabel>
                   <FormControl>
-                    {/* <Input type="number" placeholder="150000" {...field} /> */}
                     <CurrencyInput
-                      placeholder="Contoh: 200.000"
                       value={field.value ?? 0}
                       onChange={field.onChange}
                     />
                   </FormControl>
-                  <FormMessage className="text-gray-400">
-                    Jumlah tagihan otomatis saat tagihan dibuat
-                  </FormMessage>
                   <FormMessage />
                 </FormItem>
               )}
@@ -193,7 +194,7 @@ export function EditTagihanDialog({
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
-                          variant="outline"
+                          variant={"outline"}
                           className={cn(
                             "pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
@@ -214,9 +215,6 @@ export function EditTagihanDialog({
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
-                        captionLayout="dropdown"
-                        fromYear={2025}
-                        toYear={new Date().getFullYear()} // Tahun saat ini
                       />
                     </PopoverContent>
                   </Popover>
@@ -229,7 +227,6 @@ export function EditTagihanDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={form.formState.isSubmitting}
               >
                 Batal
               </Button>
