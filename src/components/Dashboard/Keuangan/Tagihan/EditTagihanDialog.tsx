@@ -46,12 +46,14 @@ interface EditTagihanDialogProps {
   tagihan: Tagihan | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onTagihanUpdated: () => void;
 }
 
 export function EditTagihanDialog({
   tagihan,
   open,
   onOpenChange,
+  onTagihanUpdated,
 }: EditTagihanDialogProps) {
   const { cache, mutate } = useSWRConfig();
 
@@ -127,6 +129,7 @@ export function EditTagihanDialog({
       mutate(statsKey);
 
       onOpenChange(false);
+      onTagihanUpdated?.();
     } catch (error: any) {
       toast.dismiss();
       toast.error("Gagal memperbarui tagihan.");
