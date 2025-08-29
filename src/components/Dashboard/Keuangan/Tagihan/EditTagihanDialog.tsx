@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
-import { format } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import { id as localeID } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 
@@ -36,9 +36,9 @@ import {
 } from "@/components/ui/popover";
 import { CurrencyInput } from "@/components/shared/CurrencyInput";
 import { api } from "@/lib/api";
-import { cn } from "@/lib/utils";
 import type { Tagihan, Siswa } from "@/lib/types";
 import { updateTagihanSchema } from "@/lib/validation";
+import { currentYear } from "@/lib/utils";
 
 type TagihanFormValues = z.infer<typeof updateTagihanSchema>;
 
@@ -190,40 +190,90 @@ export function EditTagihanDialog({
             <FormField
               control={form.control}
               name="tanggalJatuhTempo"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Tanggal Jatuh Tempo</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+              render={({ field }) => {
+                // State lokal untuk menangani input string dari pengguna
+                const [dateString, setDateString] = useState(
+                  field.value
+                    ? format(field.value, "dd/MM/yyyy", {
+                        locale: localeID,
+                      })
+                    : ""
+                );
+
+                // Sinkronkan input string ketika nilai form berubah (misal dari kalender)
+                useEffect(() => {
+                  if (field.value) {
+                    setDateString(
+                      format(field.value, "dd/MM/yyyy", {
+                        locale: localeID,
+                      })
+                    );
+                  } else {
+                    setDateString("");
+                  }
+                }, [field.value]);
+
+                return (
+                  <FormItem>
+                    <FormLabel>Tanggal Jatuh Tempo</FormLabel>
+                    <div className="relative">
                       <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP", { locale: localeID })
-                          ) : (
-                            <span>Pilih tanggal</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                        <Input
+                          placeholder="DD/MM/YYYY"
+                          value={dateString}
+                          onChange={(e) => setDateString(e.target.value)}
+                          onBlur={() => {
+                            // Coba parse tanggal saat pengguna meninggalkan input
+                            const parsedDate = parse(
+                              dateString,
+                              "dd/MM/yyyy",
+                              new Date()
+                            );
+                            if (isValid(parsedDate)) {
+                              field.onChange(parsedDate); // Update state form jika valid
+                            } else {
+                              field.onChange(undefined); // Kosongkan jika tidak valid
+                            }
+                          }}
+                        />
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            size="icon"
+                            className="absolute right-0 top-0 h-full rounded-l-none"
+                          >
+                            <CalendarIcon className="h-4 w-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              if (date) {
+                                setDateString(
+                                  format(date, "dd/MM/yyyy", {
+                                    locale: localeID,
+                                  })
+                                );
+                              }
+                            }}
+                            // disabled={(date) =>
+                            //   date > new Date() || date < new Date("1990-01-01")
+                            // }
+                            captionLayout="dropdown"
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             <DialogFooter>
               <Button

@@ -226,64 +226,6 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="jumlahSpp"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tingkat SPP</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(Number(value))}
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih tingkatan SPP" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sppOptions.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value.toString()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="jenisKelamin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Jenis Kelamin</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih jenis kelamin" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="L">Laki-laki</SelectItem>
-                        <SelectItem value="P">Perempuan</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="tanggalLahir"
                 render={({ field }) => {
                   // State lokal untuk menangani input string dari pengguna
@@ -344,11 +286,12 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                                   setDateString(format(date, "dd/MM/yyyy"));
                                 }
                               }}
-                              disabled={(date) =>
-                                date > new Date() ||
-                                date < new Date("1990-01-01")
-                              }
+                              // disabled={(date) =>
+                              //   date > new Date() ||
+                              //   date < new Date("1990-01-01")
+                              // }
                               initialFocus
+                              captionLayout="dropdown"
                             />
                           </PopoverContent>
                         </Popover>
@@ -357,6 +300,63 @@ export function AddSiswaDialog({ onSiswaAdded }: AddSiswaDialogProps) {
                     </FormItem>
                   );
                 }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="jenisKelamin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Jenis Kelamin</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih jenis kelamin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="L">Laki-laki</SelectItem>
+                        <SelectItem value="P">Perempuan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="jumlahSpp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tingkat SPP</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih tingkatan SPP" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {sppOptions.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
