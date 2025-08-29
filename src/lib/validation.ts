@@ -87,6 +87,7 @@ export const createSingleTagihanSchema = z.object({
 //tagihan
 export const createTagihanSchema = z.object({
   kelasId: z.string({ required_error: "Pilihan kelas harus diisi." }),
+  jumlahTagihan: z.coerce.number().positive("Jumlah harus angka positif."),
   keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
   tanggalJatuhTempo: z.coerce.date({
     required_error: "Tanggal jatuh tempo harus diisi.",
