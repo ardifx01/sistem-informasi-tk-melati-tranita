@@ -23,3 +23,5 @@ export function formatDate(
   // Gunakan format dengan locale Bahasa Indonesia
   return format(dateObject, formatString, { locale: id });
 }
+
+export const currentYear = new Date().getFullYear();
