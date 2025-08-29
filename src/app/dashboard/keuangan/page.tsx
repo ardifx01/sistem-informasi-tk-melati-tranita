@@ -222,14 +222,13 @@ export default function KeuanganDashboardPage() {
           </AlertTitle>
           <AlertDescription>
             Ini adalah akhir {reminderType === "tahunan" ? "tahun" : "bulan"}.
-            Kami sangat menyarankan Anda untuk mengunduh laporan keuangan
-            sebagai cadangan data.
+            Kami sangat menyarankan Anda untuk mengunduh laporan keuangan Anda .
           </AlertDescription>
         </Alert>
       )}
 
       {stats.overview.saldoSaatIni < 0 && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="bg-red-50">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Peringatan: Saldo Minus!</AlertTitle>
           <AlertDescription>
