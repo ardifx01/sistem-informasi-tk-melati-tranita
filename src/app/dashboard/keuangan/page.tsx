@@ -151,8 +151,27 @@ export default function KeuanganDashboardPage() {
     return <KeuanganDashboardSkeleton />;
   }
 
-  if (hasError || !stats || !allPemasukan || !allPengeluaran) {
-    return <div className="text-center">Gagal memuat data keuangan.</div>;
+  if (hasError) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-red-600">Error: {hasError.message}</p>
+        <p>
+          Gagal memuat data dashboard. Coba muat ulang halaman atau coba lagi
+          nanti.
+        </p>
+      </div>
+    );
+  }
+
+  if (!stats || !allPemasukan || !allPengeluaran) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-yellow-600">
+          Data tidak lengkap atau belum tersedia.
+        </p>
+        <p>Coba muat ulang halaman atau hubungi administrator.</p>
+      </div>
+    );
   }
 
   return (
@@ -223,7 +242,7 @@ export default function KeuanganDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Saldo Saat Ini"
-          value={stats.overview.saldoSaatIni}
+          value={stats.overview.saldoSaatIni ?? 0}
           icon={Wallet}
           description="Total kas yang tersedia"
           isCurrency
@@ -231,7 +250,7 @@ export default function KeuanganDashboardPage() {
         />
         <StatCard
           title="Pemasukan Bulan Ini"
-          value={stats.overview.pemasukanBulanIni}
+          value={stats.overview.pemasukanBulanIni ?? 0}
           icon={BanknoteArrowUp}
           description="Total pemasukan bulan ini"
           isCurrency
@@ -239,7 +258,7 @@ export default function KeuanganDashboardPage() {
         />
         <StatCard
           title="Pengeluaran Bulan Ini"
-          value={stats.overview.pengeluaranBulanIni}
+          value={stats.overview.pengeluaranBulanIni ?? 0}
           icon={BanknoteArrowDown}
           description="Total pengeluaran bulan ini"
           isCurrency
@@ -247,7 +266,7 @@ export default function KeuanganDashboardPage() {
         />
         <StatCard
           title="Siswa Belum Bayar"
-          value={stats.overview.totalSiswaBelumBayar}
+          value={stats.overview.totalSiswaBelumBayar ?? 0}
           icon={UserX}
           description="Siswa dengan tunggakan"
           className="text-red-600 border-red-600"
@@ -256,11 +275,11 @@ export default function KeuanganDashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <TunggakanTeratas data={stats.tunggakanTeratas} />
+          <TunggakanTeratas data={stats.tunggakanTeratas || []} />
         </div>
         <div className="lg:col-span-2">
           <KategoriPengeluaranChart
-            data={stats.kategoriPengeluaranDistribution}
+            data={stats.kategoriPengeluaranDistribution || []}
           />
         </div>
       </div>
@@ -270,7 +289,7 @@ export default function KeuanganDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 ">
-        <RecentTransactions data={stats.recentTransactions} />
+        <RecentTransactions data={stats.recentTransactions || []} />
       </div>
     </div>
   );

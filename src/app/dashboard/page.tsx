@@ -52,10 +52,25 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
-  if (error || !stats) {
+  if (error) {
     return (
       <div className="text-center p-8">
-        Gagal memuat data dashboard. Coba muat ulang halaman.
+        <p className="text-red-600">Error: {error.message}</p>
+        <p>
+          Gagal memuat data dashboard. Coba muat ulang halaman atau coba lagi
+          nanti.
+        </p>
+      </div>
+    );
+  }
+
+  if (!stats || !stats.overview || !stats.recentTransactions) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-yellow-600">
+          Data tidak lengkap atau belum tersedia.
+        </p>
+        <p>Coba muat ulang halaman atau hubungi administrator.</p>
       </div>
     );
   }
@@ -76,21 +91,21 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Siswa"
-          value={stats.overview.totalSiswa}
+          value={stats.overview.totalSiswa || 0} // PERBAIKAN: Default value
           icon={Users}
           description="Jumlah siswa aktif terdaftar"
           className="text-gray-900 border-gray-900"
         />
         <StatCard
           title="Siswa Belum Bayar"
-          value={stats.overview.totalSiswaBelumBayar}
+          value={stats.overview.totalSiswaBelumBayar || 0} // PERBAIKAN: Default value
           icon={UserX}
           description="Siswa dengan tunggakan"
           className="text-red-600 border-red-600"
         />
         <StatCard
           title="Pemasukan Bulan Ini"
-          value={stats.overview.pemasukanBulanIni}
+          value={stats.overview.pemasukanBulanIni || 0} // PERBAIKAN: Default value
           icon={BanknoteArrowUp}
           description="Total pemasukan bulan ini"
           isCurrency
@@ -98,7 +113,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Saldo Kas Saat Ini"
-          value={stats.overview.saldoSaatIni}
+          value={stats.overview.saldoSaatIni || 0} // PERBAIKAN: Default value
           icon={Wallet}
           description="Total kas yang tersedia"
           isCurrency
@@ -113,7 +128,7 @@ export default function DashboardPage() {
 
       {/* Tabel Transaksi Terbaru (Aktivitas Terkini) */}
       <div>
-        <RecentTransactions data={stats.recentTransactions} />
+        <RecentTransactions data={stats.recentTransactions || []} />
       </div>
     </div>
   );
