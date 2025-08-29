@@ -214,7 +214,7 @@ export default function KeuanganDashboardPage() {
       </div>
 
       {showBackupReminder && (
-        <Alert className="border-yellow-500 bg-yellow-50 text-yellow-800">
+        <Alert className="border-yellow-500  bg-yellow-50 text-yellow-800">
           <Lightbulb className="h-5 w-5 !text-yellow-600" />
           <AlertTitle className="font-bold">
             Pengingat Backup Data{" "}
@@ -230,7 +230,9 @@ export default function KeuanganDashboardPage() {
       {stats.overview.saldoSaatIni < 0 && (
         <Alert variant="destructive" className="bg-red-50">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Peringatan: Saldo Minus!</AlertTitle>
+          <AlertTitle className="font-bold">
+            Peringatan: Saldo Minus!
+          </AlertTitle>
           <AlertDescription>
             Total pengeluaran telah melebihi total pemasukan. Mohon periksa
             kembali transaksi Anda.

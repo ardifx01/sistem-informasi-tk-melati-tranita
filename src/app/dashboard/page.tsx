@@ -6,11 +6,20 @@ import { StatCard } from "@/components/Dashboard/Utama/StatCard";
 import { TrenKeuangan } from "@/components/Dashboard/Keuangan/Dashboard/TrenKeuangan";
 import { RecentTransactions } from "@/components/Dashboard/Keuangan/Dashboard/RecentTransactions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Wallet, BanknoteArrowUp, UserX } from "lucide-react";
+import {
+  Users,
+  Wallet,
+  BanknoteArrowUp,
+  UserX,
+  Lightbulb,
+  AlertTriangle,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import type { DashboardStats } from "@/lib/types";
 import useSWR from "swr";
 import { RefreshButton } from "@/components/shared/RefreshButton";
+import { useEffect, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Komponen Skeleton untuk tampilan loading
 function DashboardSkeleton() {
@@ -47,6 +56,24 @@ export default function DashboardPage() {
   } = useSWR<DashboardStats>("/api/dashboard/stats", fetcher, {
     refreshInterval: 30000, // Opsional: otomatis refresh setiap 30 detik
   });
+
+  const [showBackupReminder, setShowBackupReminder] = useState(false);
+  const [reminderType, setReminderType] = useState<"bulanan" | "tahunan">(
+    "bulanan"
+  );
+
+  useEffect(() => {
+    const today = new Date();
+    const dayOfMonth = today.getDate();
+    const month = today.getMonth();
+
+    if (dayOfMonth >= 25) {
+      setShowBackupReminder(true);
+      if (month === 11) {
+        setReminderType("tahunan");
+      }
+    }
+  }, []);
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -86,6 +113,33 @@ export default function DashboardPage() {
         </div>
         <RefreshButton mutateKeys="/api/dashboard/stats" />
       </div>
+
+      {showBackupReminder && (
+        <Alert className="border-yellow-500 bg-yellow-50 text-yellow-800">
+          <Lightbulb className="h-5 w-5 !text-yellow-600" />
+          <AlertTitle className="font-bold">
+            Pengingat Backup Data{" "}
+            {reminderType === "tahunan" ? "Tahunan" : "Bulanan"}
+          </AlertTitle>
+          <AlertDescription>
+            Ini adalah akhir {reminderType === "tahunan" ? "tahun" : "bulan"}.
+            Kami sangat menyarankan Anda untuk mengunduh laporan keuangan Anda .
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {stats.overview.saldoSaatIni < 0 && (
+        <Alert variant="destructive" className="bg-red-50">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle className="font-bold">
+            Peringatan: Saldo Minus!
+          </AlertTitle>
+          <AlertDescription>
+            Total pengeluaran telah melebihi total pemasukan. Mohon periksa
+            kembali transaksi Anda.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Kartu Statistik Utama (Paling Penting) */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
