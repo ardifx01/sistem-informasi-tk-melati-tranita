@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         data: {
           siswaId: newSiswa.id,
           keterangan: `SPP Bulan ${bulanIni}`,
-          jumlahTagihan: 150000, // Ganti dengan nominal SPP default Anda
+          jumlahTagihan: newSiswa.jumlahSpp,
           tanggalJatuhTempo: jatuhTempo,
           status: "BELUM_LUNAS",
         },
