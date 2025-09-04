@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 export async function GET() {
   try {
     const currentDate = new Date();
+
+    // Rentang bulan ini
     const startOfMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
@@ -20,6 +22,10 @@ export async function GET() {
       59
     );
 
+    // Rentang tahun ini
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+    const endOfYear = new Date(currentDate.getFullYear(), 11, 31, 23, 59, 59);
+
     const [
       totalSiswa,
       totalKelas,
@@ -29,6 +35,8 @@ export async function GET() {
       siswaBelumBayar,
       pemasukanBulanIni,
       pengeluaranBulanIni,
+      pemasukanTahunIni,
+      pengeluaranTahunIni,
       kategoriPengeluaranStats,
       recentPemasukan,
       recentPengeluaran,
@@ -40,8 +48,6 @@ export async function GET() {
       prisma.pemasukan.aggregate({ _sum: { jumlah: true } }),
       prisma.pengeluaran.aggregate({ _sum: { jumlah: true } }),
 
-      // Menggunakan groupBy untuk menghitung siswa unik yang belum bayar.
-      // Ini lebih aman secara tipe data di dalam transaksi.
       prisma.tagihan.groupBy({
         by: ["siswaId"],
         where: { status: "BELUM_LUNAS" },
@@ -56,11 +62,22 @@ export async function GET() {
         _sum: { jumlah: true },
         where: { tanggal: { gte: startOfMonth, lte: endOfMonth } },
       }),
+
+      prisma.pemasukan.aggregate({
+        _sum: { jumlah: true },
+        where: { tanggal: { gte: startOfYear, lte: endOfYear } },
+      }),
+      prisma.pengeluaran.aggregate({
+        _sum: { jumlah: true },
+        where: { tanggal: { gte: startOfYear, lte: endOfYear } },
+      }),
+
       prisma.pengeluaran.groupBy({
         by: ["kategori"],
         _sum: { jumlah: true },
         orderBy: undefined,
       }),
+
       prisma.pemasukan.findMany({
         take: 5,
         orderBy: { tanggal: "desc" },
@@ -69,6 +86,7 @@ export async function GET() {
         },
       }),
       prisma.pengeluaran.findMany({ take: 5, orderBy: { tanggal: "desc" } }),
+
       prisma.tagihan.findMany({
         where: { status: "BELUM_LUNAS", tanggalJatuhTempo: { lt: new Date() } },
         orderBy: { tanggalJatuhTempo: "asc" },
@@ -96,7 +114,8 @@ export async function GET() {
           (totalPengeluaran._sum.jumlah || 0),
         pemasukanBulanIni: pemasukanBulanIni._sum.jumlah || 0,
         pengeluaranBulanIni: pengeluaranBulanIni._sum.jumlah || 0,
-        // Hasil dari groupBy adalah array, jadi kita ambil panjangnya.
+        pemasukanTahunIni: pemasukanTahunIni._sum.jumlah || 0,
+        pengeluaranTahunIni: pengeluaranTahunIni._sum.jumlah || 0,
         totalSiswaBelumBayar: siswaBelumBayar.length,
       },
       kategoriPengeluaranDistribution: kategoriPengeluaranStats.map((stat) => ({
