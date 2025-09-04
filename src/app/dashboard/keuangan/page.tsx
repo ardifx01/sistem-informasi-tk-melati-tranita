@@ -205,7 +205,7 @@ export default function KeuanganDashboardPage() {
             filename="Laporan Keuangan"
             title="Laporan Keuangan"
           >
-            <Button variant="outline">
+            <Button>
               <Download className="mr-2 h-4 w-4" />
               Unduh Laporan
             </Button>
@@ -242,12 +242,19 @@ export default function KeuanganDashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
+          title="Siswa Belum Bayar"
+          value={stats.overview.totalSiswaBelumBayar ?? 0}
+          icon={UserX}
+          description="Siswa dengan tunggakan"
+          className="text-red-600 border-red-600 bg-red-100"
+        />
+        <StatCard
           title="Saldo Saat Ini"
           value={stats.overview.saldoSaatIni ?? 0}
           icon={Wallet}
           description="Total kas yang tersedia"
           isCurrency
-          className="text-violet-600 border-violet-600"
+          className="text-teal-600 border-teal-600 bg-teal-50"
         />
         <StatCard
           title="Pemasukan Bulan Ini"
@@ -255,7 +262,7 @@ export default function KeuanganDashboardPage() {
           icon={BanknoteArrowUp}
           description="Total pemasukan bulan ini"
           isCurrency
-          className="text-green-600 border-green-600"
+          className="text-green-600 border-green-600 bg-green-50"
         />
         <StatCard
           title="Pengeluaran Bulan Ini"
@@ -263,14 +270,7 @@ export default function KeuanganDashboardPage() {
           icon={BanknoteArrowDown}
           description="Total pengeluaran bulan ini"
           isCurrency
-          className="text-orange-600 border-orange-600"
-        />
-        <StatCard
-          title="Siswa Belum Bayar"
-          value={stats.overview.totalSiswaBelumBayar ?? 0}
-          icon={UserX}
-          description="Siswa dengan tunggakan"
-          className="text-red-600 border-red-600"
+          className="text-violet-600 border-violet-600 bg-violet-50"
         />
       </div>
 

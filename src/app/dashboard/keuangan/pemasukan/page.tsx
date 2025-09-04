@@ -245,7 +245,7 @@ export default function PemasukanPage() {
             filename="Laporan Pemasukan"
             title="Laporan Pemasukan"
           >
-            <Button variant="outline">
+            <Button>
               <Download className="mr-2 h-4 w-4" />
               Unduh Laporan
             </Button>

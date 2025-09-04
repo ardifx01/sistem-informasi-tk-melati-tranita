@@ -52,7 +52,6 @@ export function RefreshButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant="outline"
             size="icon"
             onClick={handleRefresh}
             disabled={isLoading}

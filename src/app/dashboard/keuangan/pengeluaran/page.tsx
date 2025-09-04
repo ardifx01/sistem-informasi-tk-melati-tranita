@@ -232,7 +232,7 @@ export default function PengeluaranPage() {
             filename="Laporan Pengeluaran"
             title="Laporan Pengeluaran"
           >
-            <Button variant="outline">
+            <Button>
               <Download className="mr-2 h-4 w-4" />
               Unduh Laporan
             </Button>

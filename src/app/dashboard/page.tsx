@@ -54,7 +54,7 @@ export default function DashboardPage() {
     error,
     isLoading,
   } = useSWR<DashboardStats>("/api/dashboard/stats", fetcher, {
-    refreshInterval: 30000, // Opsional: otomatis refresh setiap 30 detik
+    refreshInterval: 30000,
   });
 
   const [showBackupReminder, setShowBackupReminder] = useState(false);
@@ -145,33 +145,33 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Siswa"
-          value={stats.overview.totalSiswa || 0} // PERBAIKAN: Default value
+          value={stats.overview.totalSiswa || 0}
           icon={Users}
           description="Jumlah siswa aktif terdaftar"
-          className="text-gray-900 border-gray-900"
+          className="text-yellow-600 border-yellow-600 bg-yellow-50"
         />
         <StatCard
           title="Siswa Belum Bayar"
-          value={stats.overview.totalSiswaBelumBayar || 0} // PERBAIKAN: Default value
+          value={stats.overview.totalSiswaBelumBayar || 0}
           icon={UserX}
           description="Siswa dengan tunggakan"
-          className="text-red-600 border-red-600"
+          className="text-red-600 border-red-600 bg-red-100"
         />
         <StatCard
-          title="Pemasukan Bulan Ini"
-          value={stats.overview.pemasukanBulanIni || 0} // PERBAIKAN: Default value
+          title="Pemasukan Tahun Ini"
+          value={stats.overview.pemasukanTahunIni || 0}
           icon={BanknoteArrowUp}
-          description="Total pemasukan bulan ini"
+          description="Total pemasukan tahun ini"
           isCurrency
-          className="text-green-600 border-green-600"
+          className="text-green-600 border-green-600 bg-green-50"
         />
         <StatCard
-          title="Saldo Kas Saat Ini"
-          value={stats.overview.saldoSaatIni || 0} // PERBAIKAN: Default value
+          title="Pengeluaran Tahun Ini"
+          value={stats.overview.pengeluaranTahunIni || 0}
           icon={Wallet}
-          description="Total kas yang tersedia"
+          description="Total pengeluaran tahun ini"
           isCurrency
-          className="text-violet-600 border-violet-600"
+          className="text-violet-600 border-violet-600 bg-violet-50"
         />
       </div>
 
