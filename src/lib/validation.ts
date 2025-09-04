@@ -84,6 +84,15 @@ export const createSingleTagihanSchema = z.object({
   siswaId: z.string().cuid(),
 });
 
+//bulk tagihan
+export const createBulkTagihanSchema = z.object({
+  kelasId: z.string().min(1, "Pilihan kelas harus diisi."),
+  keterangan: z.string().min(3, "Keterangan minimal 3 karakter."),
+  tanggalJatuhTempo: z.coerce.date({
+    required_error: "Tanggal jatuh tempo harus diisi.",
+  }),
+});
+
 //tagihan
 export const createTagihanSchema = z.object({
   kelasId: z.string({ required_error: "Pilihan kelas harus diisi." }),
@@ -127,6 +136,7 @@ export type PengeluaranInput = z.infer<typeof createPengeluaranSchema>;
 export type UpdatePengeluaranInput = z.infer<typeof updatePengeluaranSchema>;
 
 export type TagihanInput = z.infer<typeof createTagihanSchema>;
+export type BulkTagihanInput = z.infer<typeof createBulkTagihanSchema>;
 export type UpdateTagihanInput = z.infer<typeof updateTagihanSchema>;
 
 export type KategoriInput = z.infer<typeof createKategoriSchema>;
