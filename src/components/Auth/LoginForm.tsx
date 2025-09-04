@@ -125,15 +125,15 @@ export function LoginForm({
                 </Link>
               </div>
 
-              <div className="pt-4 text-center text-sm text-muted-foreground">
+              {/* <div className="pt-4 text-center text-sm text-muted-foreground">
                 <p>--- Kredensial Demo ---</p>
                 <p>
                   <b>Admin:</b> admin@gmail.com / admin123
                 </p>
-                {/* <p>
+                <p>
                   <b>Guru:</b> guru@gmail.com / guru123
-                </p> */}
-              </div>
+                </p>
+              </div> */}
             </div>
           </form>
         </CardContent>
