@@ -25,6 +25,7 @@ async function main() {
   const kategoriOperasional = await prisma.kategori.create({
     data: { nama: "Operasional", tipe: "PENGELUARAN" },
   });
+
   console.log(
     "🗂️ Kategori default berhasil dibuat.",
     kategoriSpp,
@@ -254,136 +255,136 @@ async function main() {
   });
 
   //tagihan 1
-  const tagihanSiswa1 = await prisma.tagihan.create({
-    data: {
-      siswaId: siswa1.id,
-      keterangan: "SPP Bulan Juli 2025",
-      jumlahTagihan: 125000,
-      tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "LUNAS",
-    },
-  });
+  // const tagihanSiswa1 = await prisma.tagihan.create({
+  //   data: {
+  //     siswaId: siswa1.id,
+  //     keterangan: "SPP Bulan Juli 2025",
+  //     jumlahTagihan: 125000,
+  //     tanggalJatuhTempo: new Date("2025-07-10"),
+  //     status: "LUNAS",
+  //   },
+  // });
 
-  // Buat Pemasukan untuk melunasi tagihan siswa 1
-  await prisma.pemasukan.create({
-    data: {
-      tanggal: new Date("2025-07-05"),
-      jumlah: 125000,
-      keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG SEKOLAH",
-      tagihanId: tagihanSiswa1.id,
-    },
-  });
+  // // Buat Pemasukan untuk melunasi tagihan siswa 1
+  // await prisma.pemasukan.create({
+  //   data: {
+  //     tanggal: new Date("2025-07-05"),
+  //     jumlah: 125000,
+  //     keterangan: "Pembayaran SPP Juli via transfer",
+  //     kategori: "UANG SEKOLAH",
+  //     tagihanId: tagihanSiswa1.id,
+  //   },
+  // });
 
-  //tagihan 2
-  const tagihanSiswa2 = await prisma.tagihan.create({
-    data: {
-      siswaId: siswa2.id,
-      keterangan: "SPP Bulan Juli 2025",
-      jumlahTagihan: 125000,
-      tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "BELUM_LUNAS",
-    },
-  });
+  // //tagihan 2
+  // const tagihanSiswa2 = await prisma.tagihan.create({
+  //   data: {
+  //     siswaId: siswa2.id,
+  //     keterangan: "SPP Bulan Juli 2025",
+  //     jumlahTagihan: 125000,
+  //     tanggalJatuhTempo: new Date("2025-07-10"),
+  //     status: "BELUM_LUNAS",
+  //   },
+  // });
 
-  // Buat Pemasukan untuk melunasi tagihan siswa 2
-  await prisma.pemasukan.create({
-    data: {
-      tanggal: new Date("2025-07-05"),
-      jumlah: 125000,
-      keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG SEKOLAH",
-      tagihanId: tagihanSiswa2.id,
-    },
-  });
+  // // Buat Pemasukan untuk melunasi tagihan siswa 2
+  // await prisma.pemasukan.create({
+  //   data: {
+  //     tanggal: new Date("2025-07-05"),
+  //     jumlah: 125000,
+  //     keterangan: "Pembayaran SPP Juli via transfer",
+  //     kategori: "UANG SEKOLAH",
+  //     tagihanId: tagihanSiswa2.id,
+  //   },
+  // });
 
-  //tagihan 3
-  const tagihanSiswa3 = await prisma.tagihan.create({
-    data: {
-      siswaId: siswa3.id,
-      keterangan: "SPP Bulan Juli 2025",
-      jumlahTagihan: 125000,
-      tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "LUNAS",
-    },
-  });
+  // //tagihan 3
+  // const tagihanSiswa3 = await prisma.tagihan.create({
+  //   data: {
+  //     siswaId: siswa3.id,
+  //     keterangan: "SPP Bulan Juli 2025",
+  //     jumlahTagihan: 125000,
+  //     tanggalJatuhTempo: new Date("2025-07-10"),
+  //     status: "LUNAS",
+  //   },
+  // });
 
-  // Buat Pemasukan untuk melunasi tagihan siswa 3
-  await prisma.pemasukan.create({
-    data: {
-      tanggal: new Date("2025-07-05"),
-      jumlah: 125000,
-      keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG SEKOLAH",
-      tagihanId: tagihanSiswa3.id,
-    },
-  });
+  // // Buat Pemasukan untuk melunasi tagihan siswa 3
+  // await prisma.pemasukan.create({
+  //   data: {
+  //     tanggal: new Date("2025-07-05"),
+  //     jumlah: 125000,
+  //     keterangan: "Pembayaran SPP Juli via transfer",
+  //     kategori: "UANG SEKOLAH",
+  //     tagihanId: tagihanSiswa3.id,
+  //   },
+  // });
 
-  //tagihan 4
-  const tagihanSiswa4 = await prisma.tagihan.create({
-    data: {
-      siswaId: siswa4.id,
-      keterangan: "SPP Bulan Juli 2025",
-      jumlahTagihan: 125000,
-      tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "LUNAS",
-    },
-  });
+  // //tagihan 4
+  // const tagihanSiswa4 = await prisma.tagihan.create({
+  //   data: {
+  //     siswaId: siswa4.id,
+  //     keterangan: "SPP Bulan Juli 2025",
+  //     jumlahTagihan: 125000,
+  //     tanggalJatuhTempo: new Date("2025-07-10"),
+  //     status: "LUNAS",
+  //   },
+  // });
 
-  // Buat Pemasukan untuk melunasi tagihan siswa 4
-  await prisma.pemasukan.create({
-    data: {
-      tanggal: new Date("2025-07-05"),
-      jumlah: 125000,
-      keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG SEKOLAH",
-      tagihanId: tagihanSiswa4.id,
-    },
-  });
+  // // Buat Pemasukan untuk melunasi tagihan siswa 4
+  // await prisma.pemasukan.create({
+  //   data: {
+  //     tanggal: new Date("2025-07-05"),
+  //     jumlah: 125000,
+  //     keterangan: "Pembayaran SPP Juli via transfer",
+  //     kategori: "UANG SEKOLAH",
+  //     tagihanId: tagihanSiswa4.id,
+  //   },
+  // });
 
-  //tagihan 5
-  const tagihanSiswa5 = await prisma.tagihan.create({
-    data: {
-      siswaId: siswa5.id,
-      keterangan: "SPP Bulan Juli 2025",
-      jumlahTagihan: 125000,
-      tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "BELUM_LUNAS",
-    },
-  });
+  // //tagihan 5
+  // const tagihanSiswa5 = await prisma.tagihan.create({
+  //   data: {
+  //     siswaId: siswa5.id,
+  //     keterangan: "SPP Bulan Juli 2025",
+  //     jumlahTagihan: 125000,
+  //     tanggalJatuhTempo: new Date("2025-07-10"),
+  //     status: "BELUM_LUNAS",
+  //   },
+  // });
 
-  // Buat Pemasukan untuk melunasi tagihan siswa 4
-  await prisma.pemasukan.create({
-    data: {
-      tanggal: new Date("2025-07-05"),
-      jumlah: 125000,
-      keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG SEKOLAH",
-      tagihanId: tagihanSiswa5.id,
-    },
-  });
+  // // Buat Pemasukan untuk melunasi tagihan siswa 4
+  // await prisma.pemasukan.create({
+  //   data: {
+  //     tanggal: new Date("2025-07-05"),
+  //     jumlah: 125000,
+  //     keterangan: "Pembayaran SPP Juli via transfer",
+  //     kategori: "UANG SEKOLAH",
+  //     tagihanId: tagihanSiswa5.id,
+  //   },
+  // });
 
-  //tagihan 6
-  const tagihanSiswa6 = await prisma.tagihan.create({
-    data: {
-      siswaId: siswa6.id,
-      keterangan: "SPP Bulan Juli 2025",
-      jumlahTagihan: 125000,
-      tanggalJatuhTempo: new Date("2025-07-10"),
-      status: "BELUM_LUNAS",
-    },
-  });
+  // //tagihan 6
+  // const tagihanSiswa6 = await prisma.tagihan.create({
+  //   data: {
+  //     siswaId: siswa6.id,
+  //     keterangan: "SPP Bulan Juli 2025",
+  //     jumlahTagihan: 125000,
+  //     tanggalJatuhTempo: new Date("2025-07-10"),
+  //     status: "BELUM_LUNAS",
+  //   },
+  // });
 
-  // Buat Pemasukan untuk melunasi tagihan siswa 4
-  await prisma.pemasukan.create({
-    data: {
-      tanggal: new Date("2025-07-05"),
-      jumlah: 125000,
-      keterangan: "Pembayaran SPP Juli via transfer",
-      kategori: "UANG SEKOLAH",
-      tagihanId: tagihanSiswa6.id,
-    },
-  });
+  // // Buat Pemasukan untuk melunasi tagihan siswa 4
+  // await prisma.pemasukan.create({
+  //   data: {
+  //     tanggal: new Date("2025-07-05"),
+  //     jumlah: 125000,
+  //     keterangan: "Pembayaran SPP Juli via transfer",
+  //     kategori: "UANG SEKOLAH",
+  //     tagihanId: tagihanSiswa6.id,
+  //   },
+  // });
 
   console.log("Tagihan dan riwayat pembayaran berhasil dibuat.");
 
