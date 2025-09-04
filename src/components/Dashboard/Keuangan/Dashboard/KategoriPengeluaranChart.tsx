@@ -1,6 +1,7 @@
-// File: components/Dashboard/Keuangan//KategoriPengeluaranChart.tsx
-
+// File: components/Dashboard/Keuangan/KategoriPengeluaranChart.tsx
 "use client";
+
+import { Pie, PieChart } from "recharts";
 
 import {
   Card,
@@ -10,13 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from "recharts";
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
 
 interface ChartData {
   kategori: string;
@@ -27,63 +26,70 @@ interface KategoriPengeluaranChartProps {
   data: ChartData[];
 }
 
-const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884d8",
-  "#ff4d4d",
-];
+// fungsi generate warna HSL fleksibel dari string kategori
+function stringToColor(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = hash % 360;
+  return `hsl(${h}, 65%, 55%)`;
+}
 
 export function KategoriPengeluaranChart({
   data,
 }: KategoriPengeluaranChartProps) {
+  // transform data agar sesuai dengan struktur chart shadcn
   const chartData = data.map((item) => ({
-    name: item.kategori.replace("_", " "),
-    value: item.total,
+    kategori: item.kategori,
+    total: item.total,
+    fill: stringToColor(item.kategori),
   }));
 
+  // config chart untuk legend
+  const chartConfig = chartData.reduce(
+    (acc, item, index) => {
+      acc[item.kategori] = {
+        label: item.kategori,
+        color: item.fill,
+      };
+      return acc;
+    },
+    {
+      total: { label: "Pengeluaran" },
+    } as ChartConfig
+  );
+
   return (
-    <Card className="h-full">
-      <CardHeader>
+    <Card className="flex flex-col">
+      <CardHeader className="items-center pb-0">
         <CardTitle>Distribusi Pengeluaran</CardTitle>
-        <CardDescription>
-          Persentase pengeluaran berdasarkan kategori.
-        </CardDescription>
+        <CardDescription>Berdasarkan kategori</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square max-h-[300px]"
+        >
           <PieChart>
-            <Tooltip
-              formatter={(value: number) =>
-                new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(value)
-              }
-            />
-            <Legend />
             <Pie
               data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-              nameKey="name"
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
+              dataKey="total"
+              nameKey="kategori"
+              // label={({ name, value }) =>
+              //   `${name}: ${new Intl.NumberFormat("id-ID", {
+              //     style: "currency",
+              //     currency: "IDR",
+              //     minimumFractionDigits: 0,
+              //   }).format(value as number)}`
+              // }
+            />
+            <ChartLegend
+              content={<ChartLegendContent nameKey="kategori" />}
+              className="-translate-y-2 flex-wrap gap-2 *:basis-1/3 *:justify-start"
+            />
           </PieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
