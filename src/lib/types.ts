@@ -174,6 +174,8 @@ export interface DashboardStats {
     saldoSaatIni: number;
     pemasukanBulanIni: number;
     pengeluaranBulanIni: number;
+    pemasukanTahunIni: number;
+    pengeluaranTahunIni: number;
     totalSiswaBelumBayar: number;
   };
   genderDistribution: Array<{
