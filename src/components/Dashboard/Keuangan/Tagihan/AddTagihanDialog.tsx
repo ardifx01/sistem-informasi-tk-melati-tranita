@@ -43,8 +43,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { api } from "@/lib/api";
 import type { Kelas } from "@/lib/types";
 import { useSWRConfig } from "swr";
-import { createTagihanSchema, type TagihanInput } from "@/lib/validation";
-import { currentYear } from "@/lib/utils";
+import { createBulkTagihanSchema, type TagihanInput } from "@/lib/validation";
 
 type TagihanFormValues = TagihanInput;
 
@@ -64,7 +63,12 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
   const [kelas, setKelas] = useState<Kelas[]>([]);
 
   const form = useForm<TagihanFormValues>({
-    resolver: zodResolver(createTagihanSchema),
+    resolver: zodResolver(createBulkTagihanSchema),
+    defaultValues: {
+      kelasId: "",
+      keterangan: "",
+      tanggalJatuhTempo: undefined,
+    },
   });
 
   useEffect(() => {
@@ -141,7 +145,7 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
           Buat Tagihan
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent aria-describedby="dialog-add-tagihan-description">
         <DialogHeader>
           <DialogTitle>Buat Tagihan Baru</DialogTitle>
           <DialogDescription>
@@ -166,9 +170,7 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {/* --- OPSI BARU --- */}
                       <SelectItem value="all">Semua Kelas</SelectItem>
-                      {/* --- AKHIR OPSI BARU --- */}
                       {kelas.map((k) => (
                         <SelectItem key={k.id} value={k.id}>
                           Kelas {k.nama}
@@ -200,7 +202,6 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
               control={form.control}
               name="tanggalJatuhTempo"
               render={({ field }) => {
-                // State lokal untuk menangani input string dari pengguna
                 const [dateString, setDateString] = useState(
                   field.value
                     ? format(field.value, "dd/MM/yyyy", {
@@ -209,7 +210,6 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
                     : ""
                 );
 
-                // Sinkronkan input string ketika nilai form berubah (misal dari kalender)
                 useEffect(() => {
                   if (field.value) {
                     setDateString(
@@ -232,16 +232,15 @@ export function AddTagihanDialog({ onTagihanAdded }: AddTagihanDialogProps) {
                           value={dateString}
                           onChange={(e) => setDateString(e.target.value)}
                           onBlur={() => {
-                            // Coba parse tanggal saat pengguna meninggalkan input
                             const parsedDate = parse(
                               dateString,
                               "dd/MM/yyyy",
                               new Date()
                             );
                             if (isValid(parsedDate)) {
-                              field.onChange(parsedDate); // Update state form jika valid
+                              field.onChange(parsedDate);
                             } else {
-                              field.onChange(undefined); // Kosongkan jika tidak valid
+                              field.onChange(undefined);
                             }
                           }}
                         />
