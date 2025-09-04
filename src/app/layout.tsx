@@ -41,10 +41,10 @@ export const metadata: Metadata = {
       },
     ],
   },
-  appleWebApp: {
-    title: "SchDashboard",
-    // You can also add startupImage and statusBarStyle here
-  },
+  // appleWebApp: {
+  //   title: "SchDashboard",
+  //   // You can also add startupImage and statusBarStyle here
+  // },
 };
 
 export default function RootLayout({
