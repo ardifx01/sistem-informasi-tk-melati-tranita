@@ -153,6 +153,14 @@ export function LaporanPreviewDialog<T>({
     return { totalPemasukan, totalPengeluaran };
   }, [data, isCombined]);
 
+  const computedTitle = useMemo(() => {
+    if (isCombined) return "Laporan Keuangan";
+    if (title.toLowerCase().includes("pemasukan")) return "Laporan Pemasukan";
+    if (title.toLowerCase().includes("pengeluaran"))
+      return "Laporan Pengeluaran";
+    return "Laporan";
+  }, [isCombined, title]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
@@ -162,7 +170,7 @@ export function LaporanPreviewDialog<T>({
         <ScrollArea className="h-[70vh]">
           <div id="print-area" className="p-4">
             <div className="text-center mb-6">
-              <h1 className="text-2xl">Laporan Keuangan</h1>
+              <h1 className="text-2xl">{computedTitle}</h1>
               <p className="text-muted-foreground">TK Melati Tranita</p>
               <p className="font-semibold">{title.split(" - ")[1]}</p>
             </div>
