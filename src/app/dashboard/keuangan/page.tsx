@@ -19,16 +19,15 @@ import {
   Download,
   Lightbulb,
   AlertTriangle,
+  BookCopy,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { DashboardStats, Pemasukan, Pengeluaran } from "@/lib/types";
-import {
-  ExportLaporanDialog,
-  type ExportColumn,
-} from "@/components/shared/ExportLaporanDialog";
+import { ExportLaporanDialog } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { RefreshButton } from "@/components/shared/RefreshButton";
+import { ExportBukuKasDialog } from "@/components/shared/ExportBukuKasDialog";
 
 // Komponen Skeleton
 function KeuanganDashboardSkeleton() {
@@ -70,35 +69,6 @@ function KeuanganDashboardSkeleton() {
     </div>
   );
 }
-
-// Definisi kolom untuk ekspor
-const pemasukanColumns: ExportColumn<Pemasukan>[] = [
-  {
-    header: "Tanggal",
-    accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
-  },
-  {
-    header: "Nama Siswa",
-    accessor: (item) => item.tagihan?.siswa?.nama || "N/A",
-  },
-  {
-    header: "Kelas",
-    accessor: (item) => item.tagihan?.siswa?.kelas?.nama || "N/A",
-  },
-  { header: "Keterangan", accessor: (item) => item.keterangan },
-  { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
-  { header: "Jumlah", accessor: (item) => item.jumlah },
-];
-
-const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
-  {
-    header: "Tanggal",
-    accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
-  },
-  { header: "Keterangan", accessor: (item) => item.keterangan },
-  { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
-  { header: "Jumlah", accessor: (item) => item.jumlah },
-];
 
 // Fungsi fetcher untuk SWR
 const statsFetcher = (url: string) => api.getDashboardStats();
@@ -193,23 +163,29 @@ export default function KeuanganDashboardPage() {
               "/api/keuangan/pengeluaran",
             ]}
           />
+
           <ExportLaporanDialog
-            combinedData={{
-              pemasukan: allPemasukan,
-              pengeluaran: allPengeluaran,
-            }}
-            columns={{
-              pemasukan: pemasukanColumns,
-              pengeluaran: pengeluaranColumns,
-            }}
-            filename="Laporan Keuangan"
-            title="Laporan Keuangan"
+            allPemasukan={allPemasukan}
+            allPengeluaran={allPengeluaran}
+
+            // filename="laporan_pemasukan"
+            // title="Unduh Laporan Pemasukan"
           >
             <Button>
               <Download className="mr-2 h-4 w-4" />
-              Unduh Laporan
+              Laporan Pemasukan
             </Button>
           </ExportLaporanDialog>
+
+          <ExportBukuKasDialog
+            allPemasukan={allPemasukan}
+            allPengeluaran={allPengeluaran}
+          >
+            <Button>
+              <BookCopy className="mr-2 h-4 w-4" />
+              Unduh Buku Kas
+            </Button>
+          </ExportBukuKasDialog>
         </div>
       </div>
 
