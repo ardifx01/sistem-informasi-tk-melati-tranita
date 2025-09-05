@@ -37,8 +37,8 @@ import {
 import { format, getMonth, getYear } from "date-fns";
 import { id as localeID } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { exportPDF } from "@/lib/exportPdf";
-import { exportExcel } from "@/lib/exportExcel";
+import { exportPDF } from "@/lib/exportLaporanPdf";
+import { exportExcel } from "@/lib/exportLaporanExcel";
 
 export interface ExportColumn<T> {
   header: string;
@@ -206,6 +206,7 @@ export function ExportLaporanDialog<T extends { tanggal: string | Date }>({
       setOpen(false);
     }
   };
+
   const handleExportExcel = async () => {
     setLoading("excel");
     try {
@@ -415,7 +416,7 @@ export function ExportLaporanDialog<T extends { tanggal: string | Date }>({
           onOpenChange={setIsPreviewOpen}
           data={getFilteredData()}
           columns={columns}
-          title={`${title} - ${getFilenameSuffix()}`}
+          title={`${title} - Bulan ${getFilenameSuffix()}`}
         />
       </Dialog>
     </>
