@@ -24,10 +24,7 @@ import { api } from "@/lib/api";
 import type { Pemasukan, Kelas } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
 import { Search, RotateCcw, Download, Lightbulb } from "lucide-react";
-import {
-  ExportLaporanDialog,
-  type ExportColumn,
-} from "@/components/shared/ExportLaporanDialog";
+import { ExportLaporanDialog } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { RefreshButton } from "@/components/shared/RefreshButton";
@@ -37,24 +34,24 @@ const ITEMS_PER_PAGE = 30; // Batas data per halaman
 const pemasukanFetcher = (url: string) => api.getPemasukan();
 const kelasFetcher = (url: string) => api.getKelas();
 
-// Definisikan kolom untuk ekspor laporan pemasukan
-const pemasukanColumns: ExportColumn<Pemasukan>[] = [
-  {
-    header: "Tanggal",
-    accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
-  },
-  {
-    header: "Nama Siswa",
-    accessor: (item) => item.tagihan?.siswa?.nama || "N/A",
-  },
-  {
-    header: "Kelas",
-    accessor: (item) => item.tagihan?.siswa?.kelas?.nama || "N/A",
-  },
-  { header: "Keterangan", accessor: (item) => item.keterangan },
-  { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
-  { header: "Jumlah", accessor: (item) => item.jumlah },
-];
+// // Definisikan kolom untuk ekspor laporan pemasukan
+// const pemasukanColumns: ExportColumn<Pemasukan>[] = [
+//   {
+//     header: "Tanggal",
+//     accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
+//   },
+//   {
+//     header: "Nama Siswa",
+//     accessor: (item) => item.tagihan?.siswa?.nama || "N/A",
+//   },
+//   {
+//     header: "Kelas",
+//     accessor: (item) => item.tagihan?.siswa?.kelas?.nama || "N/A",
+//   },
+//   { header: "Keterangan", accessor: (item) => item.keterangan },
+//   { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
+//   { header: "Jumlah", accessor: (item) => item.jumlah },
+// ];
 
 function PemasukanPageSkeleton() {
   return (
@@ -239,7 +236,7 @@ export default function PemasukanPage() {
               "/api/kelas",
             ]}
           />
-          <ExportLaporanDialog
+          {/* <ExportLaporanDialog
             data={allPemasukan}
             columns={pemasukanColumns}
             filename="Laporan Pemasukan"
@@ -249,7 +246,7 @@ export default function PemasukanPage() {
               <Download className="mr-2 h-4 w-4" />
               Unduh Laporan
             </Button>
-          </ExportLaporanDialog>
+          </ExportLaporanDialog> */}
         </div>
       </div>
       <Alert variant="info">

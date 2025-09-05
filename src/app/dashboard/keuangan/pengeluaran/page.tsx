@@ -24,10 +24,7 @@ import { api } from "@/lib/api";
 import type { Kategori, Pengeluaran } from "@/lib/types";
 import { getMonth, getYear } from "date-fns";
 import { Download, Lightbulb, RotateCcw } from "lucide-react";
-import {
-  ExportColumn,
-  ExportLaporanDialog,
-} from "@/components/shared/ExportLaporanDialog";
+import { ExportLaporanDialog } from "@/components/shared/ExportLaporanDialog";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { toast } from "sonner";
@@ -35,16 +32,16 @@ import { RefreshButton } from "@/components/shared/RefreshButton";
 
 const ITEMS_PER_PAGE = 30;
 
-const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
-  {
-    header: "Tanggal",
-    accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
-  },
+// const pengeluaranColumns: ExportColumn<Pengeluaran>[] = [
+//   {
+//     header: "Tanggal",
+//     accessor: (item) => formatDate(item.tanggal, "dd/MM/yyyy"),
+//   },
 
-  { header: "Keterangan", accessor: (item) => item.keterangan },
-  { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
-  { header: "Jumlah", accessor: (item) => item.jumlah },
-];
+//   { header: "Keterangan", accessor: (item) => item.keterangan },
+//   { header: "Kategori", accessor: (item) => item.kategori.replace("_", " ") },
+//   { header: "Jumlah", accessor: (item) => item.jumlah },
+// ];
 
 const pengeluaranFetcher = (url: string) => api.getPengeluaran();
 const kategoriFetcher = (url: string) => api.getKategori("PENGELUARAN");
@@ -226,7 +223,7 @@ export default function PengeluaranPage() {
               "api/pengaturan/kategori",
             ]}
           />
-          <ExportLaporanDialog
+          {/* <ExportLaporanDialog
             data={allPengeluaran}
             columns={pengeluaranColumns}
             filename="Laporan Pengeluaran"
@@ -236,7 +233,7 @@ export default function PengeluaranPage() {
               <Download className="mr-2 h-4 w-4" />
               Unduh Laporan
             </Button>
-          </ExportLaporanDialog>
+          </ExportLaporanDialog> */}
           <AddPengeluaranDialog />
         </div>
       </div>
