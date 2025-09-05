@@ -26,8 +26,15 @@ export function formatDate(
 
 export const currentYear = new Date().getFullYear();
 
-export const formatRupiah = (value: number) =>
-  `Rp ${value.toLocaleString("id-ID")}`;
+export const formatRupiah = (value: string | number) => {
+  const number =
+    typeof value === "number" ? value : parseFloat(value.replace(/[^\d]/g, ""));
+  return isNaN(number)
+    ? value
+    : `Rp ${number.toLocaleString("id-ID", {
+        minimumFractionDigits: 0,
+      })}`;
+};
 
 export const formatTanggal = (value: string | Date) =>
   format(new Date(value), "dd/MM/yy");
