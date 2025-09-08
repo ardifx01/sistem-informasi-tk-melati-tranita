@@ -6,7 +6,10 @@ import ExcelJS from "exceljs";
 const toNumber = (v: any) => {
   if (typeof v === "number") return v;
   if (v == null) return 0;
-  const n = parseFloat(String(v).replace(/[^\d.-]+/g, ""));
+  let s = String(v).replace(/[^0-9,-]/g, ""); // hanya angka, koma, minus
+  // buang titik ribuan
+  s = s.replace(/\./g, "");
+  const n = parseFloat(s.replace(",", "."));
   return isNaN(n) ? 0 : n;
 };
 
@@ -28,6 +31,13 @@ interface ExportLaporanExcelOptions<T> {
   sheets: ExportSheet<T>[];
 }
 
+// ✅ helper untuk set font default
+function applyDefaultFont(row: ExcelJS.Row, bold = false) {
+  row.eachCell((cell) => {
+    cell.font = { name: "Times New Roman", size: 12, bold };
+  });
+}
+
 /**
  * Export laporan ke Excel (.xlsx)
  */
@@ -40,46 +50,71 @@ export const exportLaporanExcel = async <T>({
   for (const sheet of sheets) {
     const worksheet = workbook.addWorksheet(sheet.name);
 
+    worksheet.pageSetup = {
+      paperSize: 9, // A4
+      orientation: sheet.columns.length > 6 ? "landscape" : "portrait", // ✅ auto landscape jika kolom > 6
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: {
+        left: 0.5,
+        right: 0.5,
+        top: 0.75,
+        bottom: 0.75,
+        header: 0.3,
+        footer: 0.3,
+      },
+    };
+
     const colCount = sheet.columns.length + 1; // +1 untuk kolom "No"
 
-    // -------------------------
     // Row 1: Nama Sekolah
-    // -------------------------
     worksheet.mergeCells(1, 1, 1, colCount);
     worksheet.getCell(1, 1).value = sheet.schoolName;
     worksheet.getCell(1, 1).alignment = { horizontal: "center" };
-    worksheet.getCell(1, 1).font = { bold: true, size: 12 };
+    worksheet.getCell(1, 1).font = {
+      name: "Times New Roman",
+      size: 12,
+      bold: true,
+    };
 
-    // Row 2: kosong (jarak)
+    // Row 2: kosong
     worksheet.addRow([]);
 
     // Row 3: Judul
     worksheet.mergeCells(3, 1, 3, colCount);
     worksheet.getCell(3, 1).value = sheet.title;
     worksheet.getCell(3, 1).alignment = { horizontal: "center" };
-    worksheet.getCell(3, 1).font = { bold: true, size: 12 };
+    worksheet.getCell(3, 1).font = {
+      name: "Times New Roman",
+      size: 12,
+      bold: true,
+    };
 
-    // Row 4: kosong (spasi 1 baris setelah judul)
+    // Row 4: kosong
     worksheet.addRow([]);
 
-    // -------------------------
-    // Header table (baris ke-5)
-    // -------------------------
+    // Header table
     const headers = ["No", ...sheet.columns.map((c) => c.header)];
     const headerRow = worksheet.addRow(headers);
-    headerRow.font = { bold: true };
     headerRow.alignment = { horizontal: "center", vertical: "middle" };
+    applyDefaultFont(headerRow, true);
 
-    // Hitung index kolom "jumlah/uang/penerimaan/pengeluaran" di sheet.columns (0-based)
+    // deteksi kolom tanggal & jumlah
+    const tanggalColumnIndex = sheet.columns.findIndex((col) =>
+      col.header.toLowerCase().includes("tanggal")
+    );
+    const excelTanggalCol =
+      tanggalColumnIndex >= 0 ? tanggalColumnIndex + 2 : -1;
+
     const jumlahColumnIndex = sheet.columns.findIndex((col) =>
       ["jumlah", "uang", "penerimaan", "pengeluaran"].some((k) =>
         col.header.toLowerCase().includes(k)
       )
     );
-    // kolom jumlah di excel (1-based) adalah: jumlahColumnIndex + 2 (karena ada kolom No di depan)
     const excelJumlahCol = jumlahColumnIndex >= 0 ? jumlahColumnIndex + 2 : -1;
 
-    // beri border pada header agar menyatu dg table
+    // border header
     headerRow.eachCell((cell) => {
       cell.border = {
         top: { style: "thin" },
@@ -89,7 +124,7 @@ export const exportLaporanExcel = async <T>({
       };
     });
 
-    // jika ada kolom jumlah, header kolom jumlah rata kanan
+    // jumlah header rata kanan
     if (excelJumlahCol > 0) {
       headerRow.getCell(excelJumlahCol).alignment = {
         horizontal: "right",
@@ -97,28 +132,22 @@ export const exportLaporanExcel = async <T>({
       };
     }
 
-    // -------------------------
     // Body rows
-    // -------------------------
     sheet.rows.forEach((row, idx) => {
-      // prepare values: nomor + kolom
       const values: (string | number | null)[] = [idx + 1];
       for (let c = 0; c < sheet.columns.length; c++) {
         const raw = sheet.columns[c].accessor(row);
         if (c === jumlahColumnIndex) {
-          // keep numeric value if possible
-          const num = toNumber(raw);
-          values.push(num);
+          values.push(toNumber(raw));
         } else {
           values.push(raw == null ? "" : raw);
         }
       }
 
       const addedRow = worksheet.addRow(values);
+      applyDefaultFont(addedRow);
 
-      // styling tiap cell body
       addedRow.eachCell((cell, colNumber) => {
-        // semua cell border (menggabungkan header-body)
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -126,29 +155,29 @@ export const exportLaporanExcel = async <T>({
           right: { style: "thin" },
         };
 
-        // kolom No (excel col 1) center
         if (colNumber === 1) {
           cell.alignment = { horizontal: "center", vertical: "middle" };
         }
 
-        // kolom jumlah -> numeric & format rupiah, align right
+        if (excelTanggalCol > 0 && colNumber === excelTanggalCol) {
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        }
+
         if (excelJumlahCol > 0 && colNumber === excelJumlahCol) {
-          // jika nilai numeric, set numFmt; jika bukan numeric (NaN), biarkan text
-          const v = cell.value;
-          if (typeof v === "number") {
+          if (typeof cell.value === "number") {
             cell.numFmt = '"Rp"#,##0';
-            cell.alignment = { horizontal: "right", vertical: "middle" };
-          } else {
-            // non-numeric fallback (string)
-            cell.alignment = { horizontal: "right", vertical: "middle" };
           }
+          cell.alignment = { horizontal: "right", vertical: "middle" };
+        }
+
+        // ✅ khusus kolom Kelas → center
+        if (sheet.columns[colNumber - 2]?.header === "Kelas") {
+          cell.alignment = { horizontal: "center", vertical: "middle" };
         }
       });
     });
 
-    // -------------------------
-    // Row Total (merge)
-    // -------------------------
+    // Row Total
     if (jumlahColumnIndex > -1) {
       const total = sheet.rows.reduce((sum, row) => {
         const raw = sheet.columns[jumlahColumnIndex].accessor(row);
@@ -157,7 +186,6 @@ export const exportLaporanExcel = async <T>({
 
       const totalRowIndex = worksheet.lastRow!.number + 1;
 
-      // merge cells dari kolom 1 sampai excelJumlahCol - 1 (sebelum kolom jumlah)
       if (excelJumlahCol > 1) {
         worksheet.mergeCells(
           totalRowIndex,
@@ -167,9 +195,9 @@ export const exportLaporanExcel = async <T>({
         );
         const mergedCell = worksheet.getCell(totalRowIndex, 1);
         mergedCell.value = "Total";
-        mergedCell.font = { bold: true };
         mergedCell.alignment = { horizontal: "center", vertical: "middle" };
-        // beri border pada merged cell (kiri sampai kol-1)
+        mergedCell.font = { name: "Times New Roman", size: 12, bold: true };
+
         for (let c = 1; c <= excelJumlahCol - 1; c++) {
           const cell = worksheet.getCell(totalRowIndex, c);
           cell.border = {
@@ -181,13 +209,11 @@ export const exportLaporanExcel = async <T>({
         }
       }
 
-      // isi kolom jumlah (excelJumlahCol) dengan nilai numeric dan format Rupiah
       const jumlahCell = worksheet.getCell(totalRowIndex, excelJumlahCol);
       jumlahCell.value = total;
       jumlahCell.numFmt = '"Rp"#,##0';
-      jumlahCell.font = { bold: true };
       jumlahCell.alignment = { horizontal: "right", vertical: "middle" };
-      // border jumlah cell
+      jumlahCell.font = { name: "Times New Roman", size: 12, bold: true };
       jumlahCell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -196,45 +222,62 @@ export const exportLaporanExcel = async <T>({
       };
     }
 
-    // -------------------------
-    // Auto width tiap kolom (tetap preserve kolom No kecil)
-    // -------------------------
-    (worksheet.columns as ExcelJS.Column[]).forEach((col, i) => {
-      let maxLength = 0;
-      col.eachCell({ includeEmpty: true }, (cell) => {
-        const cellValue = cell.value == null ? "" : String(cell.value);
-        maxLength = Math.max(maxLength, cellValue.length);
-      });
-      if (i === 0) col.width = 6; // Kolom No
-      else col.width = Math.max(10, Math.min(50, maxLength + 2));
-    });
-
-    // -------------------------
-    // Tanda tangan (selalu 3 baris setelah footer)
-    // -------------------------
+    // tanda tangan
     let signRow = worksheet.lastRow!.number + 3;
-    // buat 2 blok tanda tangan di tengah (B-C) & (D-E)
+
     worksheet.mergeCells(`B${signRow}:C${signRow}`);
     worksheet.getCell(`B${signRow}`).value = "Ketua Yayasan";
     worksheet.getCell(`B${signRow}`).alignment = { horizontal: "center" };
+    worksheet.getCell(`B${signRow}`).font = {
+      name: "Times New Roman",
+      size: 12,
+    };
 
     worksheet.mergeCells(`D${signRow}:E${signRow}`);
     worksheet.getCell(`D${signRow}`).value = "Bendahara Sekolah";
     worksheet.getCell(`D${signRow}`).alignment = { horizontal: "center" };
+    worksheet.getCell(`D${signRow}`).font = {
+      name: "Times New Roman",
+      size: 12,
+    };
 
     signRow += 4;
     worksheet.mergeCells(`B${signRow}:C${signRow}`);
     worksheet.getCell(`B${signRow}`).value = "Raja Arita";
     worksheet.getCell(`B${signRow}`).alignment = { horizontal: "center" };
-    worksheet.getCell(`B${signRow}`).font = { bold: true };
+    worksheet.getCell(`B${signRow}`).font = {
+      name: "Times New Roman",
+      size: 12,
+      bold: true,
+    };
 
     worksheet.mergeCells(`D${signRow}:E${signRow}`);
     worksheet.getCell(`D${signRow}`).value = "Suliyah Ningsih";
     worksheet.getCell(`D${signRow}`).alignment = { horizontal: "center" };
-    worksheet.getCell(`D${signRow}`).font = { bold: true };
+    worksheet.getCell(`D${signRow}`).font = {
+      name: "Times New Roman",
+      size: 12,
+      bold: true,
+    };
+
+    // lebar kolom
+    headers.forEach((h, i) => {
+      if (i === 0) worksheet.getColumn(i + 1).width = 6; // No
+      else if (h.toLowerCase().includes("tanggal"))
+        worksheet.getColumn(i + 1).width = 15;
+      else if (h.toLowerCase().includes("kelas"))
+        worksheet.getColumn(i + 1).width = 6;
+      else if (h.toLowerCase().includes("nama siswa"))
+        worksheet.getColumn(i + 1).width = 40;
+      else if (h.toLowerCase().includes("jumlah"))
+        worksheet.getColumn(i + 1).width = 20;
+      else if (h.toLowerCase().includes("kategori"))
+        worksheet.getColumn(i + 1).width = 25;
+      else worksheet.getColumn(i + 1).width = 50;
+    });
   }
 
-  // Save file (download)
+  // Save file
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
