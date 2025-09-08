@@ -195,6 +195,10 @@ export const api = {
     return fetchAPI("/keuangan/pemasukan");
   },
 
+  getLaporanPemasukan: async (): Promise<Pemasukan[]> => {
+    return fetchAPI("/keuangan/pemasukan/laporan");
+  },
+
   getPemasukanById: async (id: string): Promise<Pemasukan> => {
     return fetchAPI(`/keuangan/pemasukan/${id}`);
   },
