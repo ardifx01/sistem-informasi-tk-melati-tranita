@@ -1,6 +1,5 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { formatRupiah } from "../utils";
 
 export type ExportColumn<T> = {
   header: string;
@@ -10,6 +9,7 @@ export type ExportColumn<T> = {
 type TableData<T> = {
   columns: ExportColumn<T>[];
   rows: T[];
+  footer?: { label: string; value: string }[];
 };
 
 interface ExportLaporanPdfOptions<T> {
@@ -29,16 +29,14 @@ export const exportLaporanPdf = <T>({
 }: ExportLaporanPdfOptions<T>) => {
   const doc = new jsPDF({ format: "a4", orientation: "portrait" });
 
-  // Header dokumen
+  // === Header dokumen ===
   doc.setFont("times", "bold");
   doc.setFontSize(12);
   doc.text(
     `${reportTitle} ${namaSekolah}`,
     doc.internal.pageSize.getWidth() / 2,
     20,
-    {
-      align: "center",
-    }
+    { align: "center" }
   );
 
   doc.setFontSize(12);
@@ -49,6 +47,7 @@ export const exportLaporanPdf = <T>({
 
   let currentY = 35;
 
+  // === Render tabel ===
   tables.forEach((table, index) => {
     if (index > 0) {
       currentY += 20;
@@ -62,32 +61,50 @@ export const exportLaporanPdf = <T>({
 
     const bodyWithNo = table.rows.map((row, idx) => [
       idx + 1,
-      ...table.columns.map((col) => {
-        const val = col.accessor(row);
-        return col.header.toLowerCase().includes("jumlah")
-          ? formatRupiah(val)
-          : val;
-      }),
+      ...table.columns.map((col) => col.accessor(row)),
     ]);
 
-    // render table utama
+    // === Footer custom dari luar ===
+    const customFooter =
+      table.footer?.map((f) => [
+        {
+          content: f.label,
+          colSpan: headersWithNo.length - 1,
+        },
+        f.value,
+      ]) || [];
+
+    // === Render tabel utama + footer ===
     autoTable(doc, {
       startY: currentY,
       head: [headersWithNo],
       body: bodyWithNo,
-      theme: "grid",
+      foot: customFooter,
+      theme: "grid", // penting -> biar semua ada border
       headStyles: {
         fillColor: [220, 220, 220],
         textColor: [0, 0, 0],
         halign: "center",
         fontStyle: "bold",
+        lineWidth: 0.1, // border tipis
+        lineColor: [0, 0, 0],
       },
       bodyStyles: {
         textColor: 50,
         halign: "left",
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0],
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
+      },
+      footStyles: {
+        fillColor: [230, 230, 230], // abu-abu
+        textColor: [0, 0, 0],
+        fontStyle: "bold",
+        halign: "right",
+        lineWidth: 0.1, // tambahkan border di footer
+        lineColor: [0, 0, 0],
       },
       styles: {
         fontSize: 10,
@@ -97,83 +114,24 @@ export const exportLaporanPdf = <T>({
       columnStyles: {
         0: { halign: "center", cellWidth: 15 }, // Kolom No
         1: { halign: "center" }, // Kolom tanggal
-        4: { halign: "right" }, //kolom jumlah
+        [headersWithNo.length - 1]: { halign: "right" }, // Kolom Jumlah
       },
       margin: { left: 14, right: 14 },
       didDrawPage: (data) => {
         currentY = data.cursor?.y || currentY;
       },
     });
-
-    // cari kolom jumlah
-    const jumlahColumnIndex = table.columns.findIndex((col) =>
-      col.header.toLowerCase().includes("jumlah")
-    );
-
-    if (jumlahColumnIndex > -1) {
-      // hitung total
-      const total = table.rows.reduce((sum, row) => {
-        const value = table.columns[jumlahColumnIndex].accessor(row);
-        return (
-          sum +
-          (typeof value === "number" ? value : parseFloat(value as string) || 0)
-        );
-      }, 0);
-
-      // siapkan row total
-      const totalRow = headersWithNo.map((_, idx) => {
-        if (idx === 0) return ""; // kolom No
-        if (idx === jumlahColumnIndex) return "Total";
-        if (idx === jumlahColumnIndex + 1) return formatRupiah(total);
-        return "";
-      });
-
-      // render row total
-      autoTable(doc, {
-        startY: currentY,
-        head: [],
-        body: [totalRow],
-        theme: "plain",
-        bodyStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontStyle: "bold",
-          halign: "right",
-        },
-        margin: { left: 14, right: 14 },
-        styles: {
-          fontSize: 10,
-          font: "times",
-        },
-        columnStyles: {
-          0: { halign: "center" }, // kolom No
-          [jumlahColumnIndex]: { halign: "right" }, // label Total
-          [jumlahColumnIndex + 1]: { halign: "right" }, // nilai total
-        },
-        didDrawPage: (data) => {
-          currentY = data.cursor?.y || currentY;
-        },
-      });
-    }
   });
 
-  // Tanda tangan
-  const pageHeight = doc.internal.pageSize.height;
+  // === Tanda tangan ===
   const pageWidth = doc.internal.pageSize.width;
-
   let lastY = (doc as any).lastAutoTable?.finalY || 0;
-
-  // Tambahkan jarak 2 spasi (anggap spasi = 12pt)
   const tandaTanganY = lastY + 24;
+  const offsetX = 50;
 
-  // Atur posisi tanda tangan lebih ke tengah
-  const offsetX = 50; // jarak dari tengah
-
-  doc.setFontSize(12);
+  doc.setFontSize(10);
   doc.setTextColor(0);
   doc.setFont("times", "normal");
-
-  // Label jabatan
   doc.text("Ketua Yayasan", pageWidth / 2 - offsetX, tandaTanganY, {
     align: "center",
   });
@@ -181,14 +139,38 @@ export const exportLaporanPdf = <T>({
     align: "center",
   });
 
-  // Nama di bawahnya
   doc.setFont("times", "bold");
-  doc.text("Raja Arita", pageWidth / 2 - offsetX, tandaTanganY + 25, {
+
+  const ketuaY = tandaTanganY + 25;
+  const bendaharaY = tandaTanganY + 25;
+
+  // Nama
+  doc.text("Raja Arita", pageWidth / 2 - offsetX, ketuaY, {
     align: "center",
   });
-  doc.text("Suliyah Ningsih", pageWidth / 2 + offsetX, tandaTanganY + 25, {
+  doc.text("Suliyah Ningsih", pageWidth / 2 + offsetX, bendaharaY, {
     align: "center",
   });
+
+  // Garis bawah
+  const lineWidth = 30; // panjang garis
+  doc.setLineWidth(0.5);
+
+  // garis bawah Raja Arita
+  doc.line(
+    pageWidth / 2 - offsetX - lineWidth / 2,
+    ketuaY + 2,
+    pageWidth / 2 - offsetX + lineWidth / 2,
+    ketuaY + 2
+  );
+
+  // garis bawah Suliyah Ningsih
+  doc.line(
+    pageWidth / 2 + offsetX - lineWidth / 2,
+    bendaharaY + 2,
+    pageWidth / 2 + offsetX + lineWidth / 2,
+    bendaharaY + 2
+  );
 
   doc.save(filename);
 };
