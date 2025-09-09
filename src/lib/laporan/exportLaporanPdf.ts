@@ -107,7 +107,7 @@ export const exportLaporanPdf = <T>({
         lineColor: [0, 0, 0],
       },
       styles: {
-        fontSize: 10,
+        fontSize: 12,
         cellPadding: 3,
         font: "times",
       },
@@ -129,7 +129,7 @@ export const exportLaporanPdf = <T>({
   const tandaTanganY = lastY + 24;
   const offsetX = 50;
 
-  doc.setFontSize(10);
+  doc.setFontSize(12);
   doc.setTextColor(0);
   doc.setFont("times", "normal");
   doc.text("Ketua Yayasan", pageWidth / 2 - offsetX, tandaTanganY, {
@@ -153,7 +153,7 @@ export const exportLaporanPdf = <T>({
   });
 
   // Garis bawah
-  const lineWidth = 30; // panjang garis
+  const lineWidth = 40; // panjang garis
   doc.setLineWidth(0.5);
 
   // garis bawah Raja Arita
