@@ -8,8 +8,7 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
-import { id as localeID } from "date-fns/locale";
-
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,8 +31,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { LaporanPreviewDialog } from "./LaporanPreviewDialog";
-import { cn } from "@/lib/utils";
+import { BukuKasPreviewDialog } from "./BukuKasPreviewDialog";
+import { cn, formatRupiah } from "@/lib/utils";
 
 // Import utils yang telah dipisahkan
 import {
@@ -86,34 +85,56 @@ export function ExportBukuKasDialog({
     });
   };
 
-  const handleExportExcel = () => {
-    const { processedData, totalPenerimaan, totalPengeluaran, sisaKas } =
-      getProcessedData();
-    const periode = getFilenameSuffix(filterType, selectedDate);
+  const handleExportExcel = async () => {
+    const toastId = toast.loading("Sedang menyiapkan file Excel...");
 
-    exportBukuKasExcel({
-      processedData,
-      totalPenerimaan,
-      totalPengeluaran,
-      sisaKas,
-      periode,
-      namaSheet: "Buku Kas",
-    });
+    try {
+      const { processedData, totalPenerimaan, totalPengeluaran, sisaKas } =
+        getProcessedData();
+      const periode = getFilenameSuffix(filterType, selectedDate);
+
+      await exportBukuKasExcel({
+        processedData,
+        totalPenerimaan,
+        totalPengeluaran,
+        sisaKas,
+        periode,
+        namaSheet: "Buku Kas",
+        signatures: {
+          ketua: "Raja Arita",
+          bendahara: "Suliyah Ningsih",
+        },
+      });
+
+      toast.success("Buku kas EXCEL berhasil di unduh", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Buku kas EXCEL gagal di unduh ❌", { id: toastId });
+    }
   };
 
-  const handleExportPdf = () => {
-    const { processedData, totalPenerimaan, totalPengeluaran, sisaKas } =
-      getProcessedData();
-    const periode = getFilenameSuffix(filterType, selectedDate);
+  const handleExportPdf = async () => {
+    const toastId = toast.loading("Sedang menyiapkan file PDF...");
 
-    exportBukuKasPdf({
-      processedData,
-      totalPenerimaan,
-      totalPengeluaran,
-      sisaKas,
-      periode,
-      namaSekolah: "TK Melati Tranita",
-    });
+    try {
+      const { processedData, totalPenerimaan, totalPengeluaran, sisaKas } =
+        getProcessedData();
+      const periode = getFilenameSuffix(filterType, selectedDate);
+
+      await exportBukuKasPdf({
+        processedData,
+        totalPenerimaan,
+        totalPengeluaran,
+        sisaKas,
+        periode,
+        namaSekolah: "TK MELATI TRANITA",
+      });
+
+      toast.success("Buku kas PDF berhasil di unduh", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Buku kas EXCEL gagal di unduh ❌", { id: toastId });
+    }
   };
 
   const handlePreview = () => {
@@ -155,7 +176,7 @@ export function ExportBukuKasDialog({
           <DialogHeader>
             <DialogTitle>Unduh Laporan Buku Kas</DialogTitle>
             <DialogDescription>
-              Pilih periode dan format laporan yang ingin diunduh.
+              Pilih periode dan format buku kas yang ingin diunduh.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -200,12 +221,28 @@ export function ExportBukuKasDialog({
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-4">
-              <Button onClick={handleExportExcel}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" /> Ekspor ke Excel
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                disabled={processedData.length === 0}
+                onClick={handleExportExcel}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export ke EXCEL
               </Button>
-              <Button onClick={handleExportPdf}>
-                <FileText className="mr-2 h-4 w-4" /> Ekspor ke PDF
+
+              <Button
+                className="bg-red-600 hover:bg-red-700"
+                disabled={processedData.length === 0}
+                onClick={handleExportPdf}
+              >
+                <FileText className="mr-2 h-4 w-4" /> Export ke PDF
               </Button>
+
+              {processedData.length === 0 && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Tidak ada data pada periode ini
+                </p>
+              )}
+
               <Button
                 onClick={handlePreview}
                 variant="outline"
@@ -218,63 +255,20 @@ export function ExportBukuKasDialog({
         </DialogContent>
       </Dialog>
 
-      <LaporanPreviewDialog
+      <BukuKasPreviewDialog
         open={isPreviewOpen}
         onOpenChange={setIsPreviewOpen}
         data={processedData}
         columns={previewColumns}
-        title={`Buku Kas - ${getFilenameSuffix(filterType, selectedDate)}`}
-        subtitle="TK Melati Tranita"
+        title={"BUKU KAS TK MELATI TRANITA"}
+        subtitle={`Periode ${getFilenameSuffix(filterType, selectedDate)}`}
       >
-        {/* Konten tambahan untuk footer pratinjau */}
-        <div className="print-footer">
-          <div className="mt-6 border-t pt-4">
-            <div className="flex justify-end space-y-1">
-              <div className="w-1/2">
-                <div className="flex justify-between font-semibold">
-                  <span>Total Penerimaan:</span>
-                  <span className="text-green-600">
-                    Rp {totalPenerimaan.toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <div className="flex justify-between font-semibold">
-                  <span>Total Pengeluaran:</span>
-                  <span className="text-red-600">
-                    Rp {totalPengeluaran.toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <div className="flex justify-between font-bold text-base border-t mt-2 pt-2">
-                  <span>Sisa Kas Periode Ini:</span>
-                  <span>Rp {sisaKas.toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="signature-area">
-            <div className="signature-box">
-              <p>Mengetahui,</p>
-              <div className="signature-line">
-                <p>
-                  <strong>( Ketua Yayasan )</strong>
-                </p>
-              </div>
-            </div>
-            <div className="signature-box">
-              <p>
-                Pekanbaru,{" "}
-                {format(new Date(), "dd MMMM yyyy", { locale: localeID })}
-              </p>
-              <p>Dibuat oleh,</p>
-              <div className="signature-line">
-                <p>
-                  <strong>( Bendahara Sekolah )</strong>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </LaporanPreviewDialog>
+        {{
+          totalPenerimaan: formatRupiah(totalPenerimaan),
+          totalPengeluaran: formatRupiah(totalPengeluaran),
+          sisaKas: formatRupiah(sisaKas),
+        }}
+      </BukuKasPreviewDialog>
     </>
   );
 }
