@@ -236,17 +236,6 @@ export default function PemasukanPage() {
               "/api/kelas",
             ]}
           />
-          {/* <ExportLaporanDialog
-            data={allPemasukan}
-            columns={pemasukanColumns}
-            filename="Laporan Pemasukan"
-            title="Laporan Pemasukan"
-          >
-            <Button>
-              <Download className="mr-2 h-4 w-4" />
-              Unduh Laporan
-            </Button>
-          </ExportLaporanDialog> */}
         </div>
       </div>
       <Alert variant="info">
