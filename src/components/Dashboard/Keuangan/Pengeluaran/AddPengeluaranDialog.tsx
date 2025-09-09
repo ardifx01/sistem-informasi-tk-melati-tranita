@@ -209,23 +209,7 @@ export function AddPengeluaranDialog({
                 );
               }}
             />
-            <FormField
-              control={form.control}
-              name="jumlah"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Jumlah (Rp)</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      placeholder="Contoh: 50.000"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <FormField
               control={form.control}
               name="kategori"
@@ -270,6 +254,23 @@ export function AddPengeluaranDialog({
                       placeholder="Contoh: Pembelian spidol dan kertas A4"
                       className="resize-none"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="jumlah"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Jumlah (Rp)</FormLabel>
+                  <FormControl>
+                    <CurrencyInput
+                      placeholder="Contoh: 50.000"
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

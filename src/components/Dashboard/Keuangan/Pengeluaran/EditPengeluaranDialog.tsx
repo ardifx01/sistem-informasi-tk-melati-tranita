@@ -289,6 +289,23 @@ export function EditPengeluaranDialog({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="jumlah"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Jumlah (Rp)</FormLabel>
+                  <FormControl>
+                    <CurrencyInput
+                      value={field.value ?? 0}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
               <Button
                 type="button"
