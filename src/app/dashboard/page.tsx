@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { StatCard } from "@/components/Dashboard/Utama/StatCard";
-import { TrenKeuangan } from "@/components/Dashboard/Keuangan/Dashboard/TrenKeuangan";
+import { TrenKeuangan } from "@/components/Dashboard/Utama/TrenKeuangan";
 import { RecentTransactions } from "@/components/Dashboard/Keuangan/Dashboard/RecentTransactions";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -20,6 +20,8 @@ import useSWR from "swr";
 import { RefreshButton } from "@/components/shared/RefreshButton";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SiswaChart } from "@/components/Dashboard/Utama/SiswaChart";
+import { GenderRatioChart } from "@/components/Dashboard/Utama/GenderRatioChart";
 
 // Komponen Skeleton untuk tampilan loading
 function DashboardSkeleton() {
@@ -173,6 +175,15 @@ export default function DashboardPage() {
           isCurrency
           className="text-violet-600 border-violet-600 bg-violet-50"
         />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <SiswaChart />
+        </div>
+        <div className="lg:col-span-2">
+          <GenderRatioChart />
+        </div>
       </div>
 
       {/* Grafik Tren Keuangan (Gambaran Besar) */}
