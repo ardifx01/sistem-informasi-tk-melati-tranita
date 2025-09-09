@@ -40,13 +40,14 @@ import { toast } from "sonner";
 import {
   processLaporanData,
   getFilenameSuffix,
-  getPeriodeText,
   type FilterType,
-  type Pemasukan,
   type Pengeluaran,
+  generateLaporanPemasukan,
+  generateLaporanPengeluaran,
 } from "@/lib/laporan/laporanDataProcessor";
 import { exportLaporanPdf } from "@/lib/laporan/exportLaporanPdf";
 import { exportLaporanExcel } from "@/lib/laporan/exportLaporanExcel";
+import { Pemasukan } from "@/lib/types";
 
 interface ExportLaporanDialogProps {
   children: React.ReactNode;
@@ -62,7 +63,6 @@ export function ExportLaporanDialog({
   const [open, setOpen] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>("bulanan");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [loading, setLoading] = useState(false);
 
   const currentYear = new Date().getFullYear();
 
@@ -79,33 +79,41 @@ export function ExportLaporanDialog({
   const handleExportPemasukan = async (exportFormat: "pdf" | "excel") => {
     const { pemasukan } = getProcessedData();
     const periode = getFilenameSuffix(filterType, selectedDate);
-    const periodeText = getPeriodeText(filterType, selectedDate);
 
-    const columns = [
-      {
-        header: "Tanggal",
-        accessor: (row: Pemasukan) =>
-          format(new Date(row.tanggal), "dd/MM/yyyy", { locale: localeID }),
-      },
-      { header: "Keterangan", accessor: (row: Pemasukan) => row.keterangan },
-      { header: "Kategori", accessor: (row: Pemasukan) => row.kategori || "-" },
-      { header: "Jumlah", accessor: (row: Pemasukan) => row.jumlah },
-    ];
+    const toastId = toast.loading(
+      `Mengunduh laporan pemasukan dalam bentuk ${exportFormat.toUpperCase()}...`
+    );
 
-    setLoading(true);
     try {
+      // proses jadi laporan siap export
+      const laporanPemasukan = generateLaporanPemasukan(pemasukan);
+
+      const columns = [
+        { header: "Tanggal", accessor: (row: any) => row.tanggal },
+        { header: "Kelas", accessor: (row: any) => row.kelas },
+        { header: "Nama Siswa", accessor: (row: any) => row.namaSiswa },
+        { header: "Uraian", accessor: (row: any) => row.keterangan },
+        { header: "Jumlah", accessor: (row: any) => row.jumlah },
+      ];
+
       if (exportFormat === "pdf") {
         exportLaporanPdf({
           filename: `Laporan Pemasukan ${periode}.pdf`,
           reportTitle: "LAPORAN PEMASUKAN",
-          periode: periodeText,
+          periode: periode,
           tables: [
             {
-              // title: "Data Pemasukan",
               columns,
-              rows: pemasukan,
+              rows: laporanPemasukan.rows,
+              footer: [
+                {
+                  label: "Total",
+                  value: laporanPemasukan.totalFormatted,
+                },
+              ],
             },
           ],
+
           namaSekolah: "TK MELATI TRANITA",
         });
       } else {
@@ -113,46 +121,48 @@ export function ExportLaporanDialog({
           sheets: [
             {
               name: "Pemasukan",
-              title: `Laporan Pemasukan - ${periodeText}`,
+              title: `Laporan Pemasukan - ${periode}`,
               schoolName: "TK MELATI TRANITA",
               columns,
-              rows: pemasukan,
+              rows: laporanPemasukan.rows,
+              // footer: [
+              //   {
+              //     label: "Total",
+              //     value: laporan.totalFormatted,
+              //   },
+              // ],
             },
           ],
           filename: `Laporan Pemasukan ${periode}`,
         });
       }
-      toast.success(
-        `Laporan pemasukan (${exportFormat.toUpperCase()}) berhasil diunduh`
-      );
 
-      // ✅ tutup modal
+      toast.success(
+        `Laporan pemasukan ${exportFormat.toUpperCase()} berhasil diunduh`,
+        { id: toastId }
+      );
       setOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error(`Gagal mengunduh Laporan pemasukan`);
-    } finally {
-      setLoading(false);
+      toast.error(`Gagal mengunduh laporan pemasukan`, { id: toastId });
     }
   };
 
   const handleExportPengeluaran = async (exportFormat: "pdf" | "excel") => {
     const { pengeluaran } = getProcessedData();
     const periode = getFilenameSuffix(filterType, selectedDate);
-    const periodeText = getPeriodeText(filterType, selectedDate);
+
+    const toastId = toast.loading(
+      `Mengunduh laporan pengeluaran dalam bentuk ${exportFormat.toUpperCase()}...`
+    );
+
+    const laporanPengeluaran = generateLaporanPengeluaran(pengeluaran);
 
     const columns = [
-      {
-        header: "Tanggal",
-        accessor: (row: Pengeluaran) =>
-          format(new Date(row.tanggal), "dd/MM/yyyy", { locale: localeID }),
-      },
-      { header: "Keterangan", accessor: (row: Pengeluaran) => row.keterangan },
-      {
-        header: "Kategori",
-        accessor: (row: Pengeluaran) => row.kategori || "-",
-      },
-      { header: "Jumlah", accessor: (row: Pengeluaran) => row.jumlah },
+      { header: "Tanggal", accessor: (row: any) => row.tanggal },
+      { header: "Uraian", accessor: (row: any) => row.keterangan },
+      { header: "Kategori", accessor: (row: any) => row.kategori },
+      { header: "Jumlah", accessor: (row: any) => row.jumlah },
     ];
 
     try {
@@ -160,12 +170,17 @@ export function ExportLaporanDialog({
         exportLaporanPdf({
           filename: `Laporan Pengeluaran ${periode}.pdf`,
           reportTitle: "LAPORAN PENGELUARAN",
-          periode: periodeText,
+          periode: periode,
           tables: [
             {
-              // title: "Data Pengeluaran",
               columns,
-              rows: pengeluaran,
+              rows: laporanPengeluaran.rows,
+              footer: [
+                {
+                  label: "Total",
+                  value: laporanPengeluaran.totalFormatted,
+                },
+              ],
             },
           ],
           namaSekolah: "TK MELATI TRANITA",
@@ -175,26 +190,24 @@ export function ExportLaporanDialog({
           sheets: [
             {
               name: "Pengeluaran",
-              title: `Laporan Pengeluaran - ${periodeText}`,
+              title: `Laporan Pengeluaran - ${periode}`,
               schoolName: "TK MELATI TRANITA",
               columns,
-              rows: pengeluaran,
+              rows: laporanPengeluaran.rows,
             },
           ],
           filename: `Laporan Pengeluaran ${periode}`,
         });
       }
       toast.success(
-        `Laporan pengeluaran (${exportFormat.toUpperCase()}) berhasil diunduh`
+        `Laporan pengeluaran (${exportFormat.toUpperCase()}) berhasil diunduh`,
+        { id: toastId }
       );
 
-      // ✅ tutup modal
-      setOpen(false);
+      setOpen(false); // ✅ tutup modal
     } catch (error) {
       console.error(error);
-      toast.error(`Gagal mengunduh Laporan pengeluaran`);
-    } finally {
-      setLoading(false);
+      toast.error(`Gagal mengunduh Laporan pengeluaran`, { id: toastId });
     }
   };
 
@@ -238,7 +251,7 @@ export function ExportLaporanDialog({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {getPeriodeText(filterType, selectedDate)}
+                  {getFilenameSuffix(filterType, selectedDate)}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
