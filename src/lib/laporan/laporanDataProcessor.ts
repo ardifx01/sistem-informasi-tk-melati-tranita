@@ -204,14 +204,5 @@ export function getFilenameSuffix(
 ): string {
   return filterType === "tahunan"
     ? format(selectedDate, "yyyy")
-    : format(selectedDate, "MMMM-yyyy", { locale: localeID });
-}
-
-export function getPeriodeText(
-  filterType: FilterType,
-  selectedDate: Date
-): string {
-  return filterType === "tahunan"
-    ? format(selectedDate, "yyyy")
     : format(selectedDate, "MMMM yyyy", { locale: localeID });
 }
